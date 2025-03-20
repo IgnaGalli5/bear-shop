@@ -171,8 +171,9 @@
   /* Hero Section */
   .hero {
     background-color: var(--color-light);
-    padding: 100px 0;
+    padding: 30px 0;
     text-align: center;
+    height: 400px;
   }
   
   .hero-content {
