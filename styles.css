@@ -264,6 +264,7 @@
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     transition: var(--transition);
+    cursor: pointer;
   }
   
   .product-card:hover {
@@ -363,6 +364,7 @@
     gap: 30px;
   }
   
+  /* Hacer que las tarjetas de categoría sean clickeables */
   .category-card {
     text-align: center;
     background-color: var(--color-white);
@@ -370,10 +372,16 @@
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     transition: var(--transition);
+    cursor: pointer;
   }
   
   .category-card:hover {
     transform: translateY(-10px);
+    background-color: var(--color-light);
+  }
+  
+  .category-card:hover h3 {
+    color: var(--color-white);
   }
   
   .category-card img {
@@ -511,9 +519,15 @@
     margin-bottom: 10px;
   }
   
-  .cart-item-quantity {
+  .cart-item-actions {
     display: flex;
     align-items: center;
+  }
+  
+  .quantity-control {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
   }
   
   .quantity-btn {
@@ -522,12 +536,12 @@
     border: none;
     width: 30px;
     height: 30px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 4px;
   }
   
   .quantity-input {
@@ -540,13 +554,11 @@
   }
   
   .remove-item {
-    color: #ff3860;
     background: none;
     border: none;
+    color: #ff3860;
     cursor: pointer;
-    font-size: 0.9rem;
-    margin-top: 10px;
-    display: inline-block;
+    font-size: 1.2rem;
   }
   
   .cart-summary {
@@ -559,8 +571,10 @@
   
   .cart-summary h3 {
     font-size: 1.5rem;
-    margin-bottom: 20px;
     color: var(--color-dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
   
   .summary-item {
@@ -573,17 +587,17 @@
   .summary-item.total {
     font-weight: bold;
     font-size: 1.3rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
     padding-top: 15px;
-    margin-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
   
   .payment-methods {
-    margin: 20px 0;
+    margin: 25px 0;
   }
   
   .payment-methods h4 {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     color: var(--color-dark);
   }
   
@@ -601,6 +615,11 @@
   
   .payment-options input {
     margin-right: 10px;
+  }
+  
+  #checkout-btn {
+    width: 100%;
+    margin-top: 20px;
   }
   
   /* Modal */
@@ -621,9 +640,10 @@
     margin: 10% auto;
     padding: 30px;
     border-radius: 8px;
-    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     max-width: 500px;
     position: relative;
+    width: 90%;
   }
   
   .close {
@@ -631,32 +651,122 @@
     top: 15px;
     right: 20px;
     font-size: 1.5rem;
-    font-weight: bold;
     cursor: pointer;
+    z-index: 1200; /* Asegurar que esté por encima de otros elementos */
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-light);
+    color: var(--color-dark);
+    border-radius: 50%;
+  }
+  
+  .close:hover {
+    background-color: var(--color-dark);
+    color: var(--color-white);
   }
   
   .modal h2 {
     color: var(--color-dark);
     margin-bottom: 20px;
+    text-align: center;
   }
   
-  .form-group {
-    margin-bottom: 20px;
+  /* Estilos para el modal de detalles de producto */
+  .product-detail-modal {
+    max-width: 900px;
+    padding: 0;
+    overflow: hidden;
+    width: 95%;
   }
   
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
+  .product-detail-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .product-detail-image {
+    height: 500px;
+    background-color: var(--color-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Para posicionar el botón de cierre */
+  }
+  
+  .product-detail-image img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  
+  .product-detail-info {
+    padding: 30px;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  
+  .product-detail-info h2 {
+    font-size: 1.8rem;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+  
+  .modal-product-price {
+    font-size: 1.5rem;
     font-weight: bold;
+    margin-bottom: 15px;
     color: var(--color-dark);
   }
   
-  .form-group input {
+  .product-rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .product-rating .stars {
+    margin-right: 10px;
+  }
+  
+  .rating-count {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .product-description,
+  .product-features,
+  .product-usage {
+    margin-bottom: 20px;
+  }
+  
+  .product-description h3,
+  .product-features h3,
+  .product-usage h3,
+  .product-quantity h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--color-dark);
+  }
+  
+  .product-features ul {
+    padding-left: 20px;
+  }
+  
+  .product-features li {
+    margin-bottom: 5px;
+    list-style-type: disc;
+  }
+  
+  .product-quantity {
+    margin-bottom: 20px;
+  }
+  
+  .add-to-cart-modal {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: inherit;
+    margin-top: 20px;
   }
   
   /* Footer */
@@ -797,6 +907,32 @@
     .about-image {
       order: -1;
     }
+  
+    .product-detail-content {
+      grid-template-columns: 1fr;
+    }
+  
+    .product-detail-image {
+      height: 350px;
+    }
+  
+    .product-detail-info {
+      padding: 25px;
+      max-height: none; /* Eliminar altura máxima en tablets/móviles */
+    }
+  
+    /* Mejorar el botón de cierre en tablets */
+    .product-detail-modal .close {
+      top: 10px;
+      right: 10px;
+      background-color: var(--color-dark);
+      color: var(--color-white);
+    }
+
+   #product-search{
+    width: 120px;
+    margin: 0;
+   }
   }
   
   @media (max-width: 768px) {
@@ -840,9 +976,64 @@
   
     .cart-item-actions {
       grid-column: span 2;
-      display: flex;
       justify-content: space-between;
-      margin-top: 10px;
+      margin-top: 15px;
+    }
+  
+    .modal-content {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+  
+    .product-detail-modal {
+      padding: 0;
+      overflow-y: auto;
+    }
+  
+    .product-detail-content {
+      height: 100%;
+      overflow-y: auto;
+    }
+  
+    .product-detail-image {
+      height: 300px;
+      min-height: 300px; /* Asegurar altura mínima */
+    }
+  
+    /* Hacer el botón de cierre más grande y visible en móviles */
+    .product-detail-modal .close {
+      top: 15px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      font-size: 1.8rem;
+      background-color: var(--color-dark);
+      color: var(--color-white);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+  
+    /* Añadir un botón flotante para cerrar en la parte inferior */
+    .mobile-close-btn {
+      display: block;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: var(--color-dark);
+      color: var(--color-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+      z-index: 1200;
     }
   }
   
@@ -887,6 +1078,47 @@
     .footer-newsletter button {
       margin-top: 10px;
     }
+  
+    .product-detail-image {
+      height: 250px;
+      min-height: 250px;
+    }
+  
+    .product-detail-info {
+      padding: 20px;
+    }
+  
+    .modal-product-price {
+      font-size: 1.2rem;
+    }
+  
+    .product-detail-info h2 {
+      font-size: 1.5rem;
+      padding-right: 40px; /* Espacio para el botón de cierre */
+    }
+  
+    /* Ajustar espaciado en el modal para móviles pequeños */
+    .product-description,
+    .product-features,
+    .product-usage {
+      margin-bottom: 15px;
+    }
+  
+    .product-description h3,
+    .product-features h3,
+    .product-usage h3,
+    .product-quantity h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+  
+    .product-features ul {
+      padding-left: 15px;
+    }
+  
+    .product-features li {
+      margin-bottom: 3px;
+    }
   }
   
   /* Para pantallas muy pequeñas, ajustamos aún más */
@@ -913,6 +1145,31 @@
     .add-to-cart {
       padding: 6px 8px;
       font-size: 0.8rem;
+    }
+  
+    .product-detail-image {
+      height: 200px;
+      min-height: 200px;
+    }
+  
+    .product-detail-info {
+      padding: 15px;
+    }
+  
+    .product-detail-info h2 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+  
+    .modal-product-price {
+      font-size: 1.1rem;
+    }
+  
+    /* Hacer el botón de cierre aún más grande en pantallas muy pequeñas */
+    .product-detail-modal .close {
+      width: 45px;
+      height: 45px;
+      font-size: 2rem;
     }
   }
   
