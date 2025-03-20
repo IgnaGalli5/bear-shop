@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Configuración básica del documento -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bear.Shop - Tienda Online</title>
+    <!-- Enlaces a hojas de estilo -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/bogart" rel="stylesheet">
 </head>
 <body>
+    <!-- Encabezado del sitio con navegación -->
     <header>
         <div class="container">
+            <!-- Logo del sitio -->
             <div class="logo">
                 <h1>BEAR</h1>
             </div>
+            <!-- Menú de navegación principal -->
             <nav>
                 <ul class="menu">
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#productos">Productos</a></li>
-                    <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#carrito">Carrito</a></li>
                 </ul>
             </nav>
+            <!-- Iconos de funcionalidad (búsqueda, usuario, carrito) -->
             <div class="icons">
                 <a href="#" class="icon" id="search-icon"><i class="fas fa-search"></i></a>
                 <a href="#" class="icon"><i class="fas fa-user"></i></a>
@@ -29,6 +34,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">0</span>
                 </a>
+                <!-- Botón de menú para móviles -->
                 <button class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -36,6 +42,37 @@
         </div>
     </header>
 
+    <!-- Sección de novedades/promociones con imágenes rotativas -->
+    <section class="news-slider">
+        <div class="container">
+            <div class="slider-container">
+                <div class="slider" id="news-slider">
+                    <!-- Las imágenes se cargarán dinámicamente con JavaScript -->
+                    <div class="slide active">
+                        <img src="img/promo1.jpg" alt="Promoción 1">
+                    </div>
+                    <div class="slide">
+                        <img src="img/promo2.jpg" alt="Promoción 2">
+                    </div>
+                    <div class="slide">
+                        <img src="img/promo3.jpg" alt="Nuevos ingresos">
+                    </div>
+                    <div class="slide">
+                        <img src="img/promo4.jpg" alt="Oferta especial">
+                    </div>
+                </div>
+                <!-- Indicadores de posición del slider -->
+                <div class="slider-indicators" id="slider-indicators">
+                    <span class="indicator active" data-index="0"></span>
+                    <span class="indicator" data-index="1"></span>
+                    <span class="indicator" data-index="2"></span>
+                    <span class="indicator" data-index="3"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección hero con imagen principal y buscador -->
     <section class="hero">
         <div class="container">
             <div class="hero-content">
@@ -52,6 +89,7 @@
         </div>
     </section>
 
+    <!-- Sección de productos -->
     <section id="productos" class="products">
         <div class="container">
             <h2 class="section-title">Nuestros Productos</h2>
@@ -62,6 +100,7 @@
                 <button id="clear-search" class="btn-small">Limpiar búsqueda</button>
             </div>
             
+            <!-- Contenedor de productos -->
             <div class="product-grid" id="product-grid">
                 <!-- Los productos se cargarán dinámicamente con JavaScript -->
             </div>
@@ -71,11 +110,12 @@
         </div>
     </section>
 
-    <!-- Modificar la sección de categorías para que sean clickeables y filtren productos -->
+    <!-- Sección de categorías de productos -->
     <section id="categorias" class="categories">
         <div class="container">
             <h2 class="section-title">Categorías</h2>
             <div class="category-grid">
+                <!-- Tarjetas de categorías clickeables -->
                 <div class="category-card" data-category="skincare">
                     <img src="img/skin.jpg" alt="Categoría 1">
                     <h3>Skin Care</h3>
@@ -92,50 +132,12 @@
         </div>
     </section>
 
-    <section id="nosotros" class="about">
-        <div class="container">
-            <div class="about-content">
-                <div class="about-text">
-                    <h2 class="section-title">Sobre Nosotros</h2>
-                    <p>Somos una empresa dedicada a la creación de productos artesanales de alta calidad. Cada pieza está hecha a mano con materiales seleccionados cuidadosamente para garantizar durabilidad y belleza.</p>
-                    <p>Nuestra misión es ofrecer productos únicos que combinen tradición y modernidad, respetando siempre el medio ambiente y apoyando a artesanos locales.</p>
-                    <a href="#" class="btn">Conoce más</a>
-                </div>
-                <div class="about-image">
-                    <img src="/placeholder.svg?height=400&width=500" alt="Sobre Nosotros">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="testimonios" class="testimonials">
-        <div class="container">
-            <h2 class="section-title">Lo que dicen nuestros clientes</h2>
-            <div class="testimonial-slider">
-                <div class="testimonial">
-                    <div class="testimonial-content">
-                        <p>"Los productos son increíbles, la calidad supera mis expectativas. Definitivamente volveré a comprar."</p>
-                        <div class="testimonial-author">
-                            <h4>María González</h4>
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Sección de Carrito reemplaza a la sección de contacto -->
+    <!-- Sección de carrito de compras -->
     <section id="carrito" class="cart-section">
         <div class="container">
             <h2 class="section-title">Tu Carrito de Compras</h2>
             <div class="cart-content">
+                <!-- Contenedor de items del carrito -->
                 <div class="cart-items" id="cart-items">
                     <!-- Los items del carrito se cargarán dinámicamente -->
                     <div class="empty-cart" id="empty-cart">
@@ -145,6 +147,7 @@
                     </div>
                 </div>
                 
+                <!-- Resumen del carrito -->
                 <div class="cart-summary" id="cart-summary" style="display: none;">
                     <h3>Resumen de compra</h3>
                     <div class="summary-item">
@@ -160,6 +163,7 @@
                         <span id="cart-total">$0.00</span>
                     </div>
                     
+                    <!-- Opciones de pago -->
                     <div class="payment-methods">
                         <h4>Método de pago:</h4>
                         <div class="payment-options">
@@ -252,22 +256,36 @@
         </div>
     </div>
 
+    <!-- Pie de página -->
     <footer>
         <div class="container">
             <div class="footer-content">
+                <!-- Logo del footer -->
                 <div class="footer-logo">
                     <h2>BEAR</h2>
-                   
+                    <!-- Imágenes de medios de pago y envíos -->
+                    <div class="payment-shipping-methods">
+                        <div class="payment-methods-img">
+                            <h4>Medios de pago</h4>
+                            <img src="img/medios1.png" alt="Medios de pago" class="desktop-payment">
+                            <img src="img/medios2.png" alt="Medios de pago" class="mobile-payment">
+                        </div>
+                        <div class="shipping-methods-img">
+                            <h4>Envíos</h4>
+                            <img src="img/envio.png" alt="Métodos de envío">
+                        </div>
+                    </div>
                 </div>
+                <!-- Enlaces rápidos -->
                 <div class="footer-links">
                     <h3>Enlaces rápidos</h3>
                     <ul>
                         <li><a href="#inicio">Inicio</a></li>
                         <li><a href="#productos">Productos</a></li>
-                        <li><a href="#nosotros">Nosotros</a></li>
                         <li><a href="#carrito">Carrito</a></li>
                     </ul>
                 </div>
+                <!-- Formulario de newsletter -->
                 <div class="footer-newsletter">
                     <h3>Suscríbete a nuestro newsletter</h3>
                     <form>
@@ -276,12 +294,14 @@
                     </form>
                 </div>
             </div>
+            <!-- Copyright -->
             <div class="footer-bottom">
                 <p>&copy; 2025 BEAR. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
 
+    <!-- Script principal -->
     <script src="script.js"></script>
 </body>
 </html>
