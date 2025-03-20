@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const encodedMessage = encodeURIComponent(message);
         
         // Abrir WhatsApp con el mensaje
-        window.open(`https://wa.me/5491112345678?text=${encodedMessage}`, '_blank');
+        window.open(`https://wa.me/5491122834351?text=${encodedMessage}`, '_blank');
         
         // Cerrar modal y limpiar carrito
         checkoutModal.style.display = 'none';
