@@ -730,7 +730,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Actualizar cantidad de un item en el carrito
   function updateItemQuantity(id, action, value = null) {
     const itemIndex = cart.findIndex((item) => item.id === id)
-
     if (itemIndex === -1) return
 
     switch (action) {
@@ -747,18 +746,19 @@ document.addEventListener("DOMContentLoaded", () => {
         break
     }
 
+    saveCart()
     updateCart()
   }
 
   // Eliminar producto del carrito
   function removeFromCart(id) {
     const itemIndex = cart.findIndex((item) => item.id === id)
-
     if (itemIndex === -1) return
 
     const removedItem = cart[itemIndex]
     cart.splice(itemIndex, 1)
 
+    saveCart()
     updateCart()
     showNotification(`${removedItem.name} eliminado del carrito`)
   }
@@ -790,7 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault()
 
     const customerName = document.getElementById("customer-name").value
-    const customerPhone = document.getElementById("customer-phone").value
+    const customerEmail = document.getElementById("customer-email").value
     const paymentMethod = document.querySelector('input[name="payment"]:checked').value
 
     // Crear mensaje para WhatsApp
@@ -805,17 +805,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     message += `\n*Total:* ${formatPrice(total)}`
     message += `\n*Método de pago:* ${getPaymentMethodName(paymentMethod)}`
-    message += `\n*Teléfono:* ${customerPhone}`
+    message += `\n*Email:* ${customerEmail}`
 
     // Codificar mensaje para URL
     const encodedMessage = encodeURIComponent(message)
 
     // Abrir WhatsApp con el mensaje
-    window.open(`https://wa.me/5491112345678?text=${encodedMessage}`, "_blank")
+    window.open(`https://wa.me/5491122834351?text=${encodedMessage}`, "_blank")
 
     // Cerrar modal y limpiar carrito
     checkoutModal.style.display = "none"
     cart = []
+    saveCart()
     updateCart()
     showNotification("¡Pedido enviado con éxito!")
   }
@@ -1017,6 +1018,65 @@ document.addEventListener("DOMContentLoaded", () => {
   renderProducts()
   updateCart()
   startSlider() // Iniciar el slider de novedades
+
+  // Agregar función para guardar el carrito en localStorage
+  function saveCart() {
+    localStorage.setItem("bearShopCart", JSON.stringify(cart))
+  }
+
+  // Cargar carrito desde localStorage al inicio
+  function loadCart() {
+    const storedCart = localStorage.getItem("bearShopCart")
+    if (storedCart) {
+      cart = JSON.parse(storedCart)
+      updateCart()
+    }
+  }
+
+  loadCart()
+
+  // Agregar delegación de eventos para los botones de cantidad en el carrito
+  // Usar la variable cartItemsContainer ya declarada anteriormente
+  // const cartItemsContainer = document.getElementById('cart-items');
+  if (cartItemsContainer) {
+    cartItemsContainer.addEventListener("click", (e) => {
+      // Verificar si se hizo clic en un botón de incremento o decremento
+      if (e.target.classList.contains("quantity-btn") || e.target.closest(".quantity-btn")) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        const button = e.target.classList.contains("quantity-btn") ? e.target : e.target.closest(".quantity-btn")
+        const productId = Number.parseInt(button.getAttribute("data-id"))
+
+        if (button.classList.contains("increase")) {
+          updateItemQuantity(productId, "increase")
+        } else if (button.classList.contains("decrease")) {
+          updateItemQuantity(productId, "decrease")
+        }
+      }
+
+      // Verificar si se hizo clic en el botón de eliminar
+      if (e.target.classList.contains("remove-item") || e.target.closest(".remove-item")) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        const button = e.target.classList.contains("remove-item") ? e.target : e.target.closest(".remove-item")
+        const productId = Number.parseInt(button.getAttribute("data-id"))
+        removeFromCart(productId)
+      }
+    })
+  }
+
+  // Cargar carrito desde localStorage al iniciar
+  const savedCart = localStorage.getItem("bearShopCart")
+  if (savedCart) {
+    try {
+      cart = JSON.parse(savedCart)
+      updateCart()
+    } catch (e) {
+      console.error("Error parsing saved cart:", e)
+    }
+  }
 })
 
 // Añadir botón de cierre flotante para móviles

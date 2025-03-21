@@ -568,12 +568,15 @@ header .container {
   font-size: 1.2rem;
 }
 
+/* Modificar el estilo del cart-summary para evitar que se estire demasiado */
 .cart-summary {
   background-color: var(--color-light);
   border-radius: 8px;
   padding: 20px;
   position: sticky;
   top: 100px;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .cart-summary h3 {
@@ -602,6 +605,7 @@ header .container {
 .payment-methods {
   margin: 25px 0;
 }
+
 
 .payment-methods h4 {
   margin-bottom: 15px;
@@ -969,6 +973,19 @@ footer {
   }
 }
 
+/* Ocultar flechas de los inputs numéricos */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -webkit-appearance: none;
+-moz-appearance: textfield;
+appearance: none;
+}
+
 /* Responsive Styles */
 @media (max-width: 992px) {
   .cart-content {
@@ -1123,6 +1140,27 @@ footer {
   .shipping-methods-img img {
     max-width: 150px;
   }
+
+  .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .checkout-payment-img {
+    max-width: 200px;
+    margin: 0 auto 15px;
+  }
+
+  .product-list {
+    max-height: 150px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  #checkout-form {
+    margin-top: 15px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1218,5 +1256,88 @@ footer {
     width: 8px;
     height: 8px;
   }
+
+  .checkout-payment-img {
+    max-width: 180px;
+    margin: 0 auto 10px;
+  }
+
+  .product-list {
+    max-height: 120px;
+    font-size: 0.8rem;
+  }
+
+  .modal-content {
+    padding: 15px;
+    margin: 5% auto;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-group input {
+    padding: 8px;
+  }
+}
+
+/* Estilos para el modal de checkout */
+.checkout-payment-img {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 20px;
+  display: block;
+}
+
+.product-list {
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--color-light);
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 0.9rem;
+}
+
+.product-list-item {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.product-list-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Añadir estos estilos para el formulario de checkout */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--color-dark);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: var(--font-primary);
+}
+
+.form-group input:focus {
+  border-color: var(--color-dark);
+  outline: none;
+}
+
+#checkout-form .btn {
+  width: 100%;
+  margin-top: 10px;
 }
 
