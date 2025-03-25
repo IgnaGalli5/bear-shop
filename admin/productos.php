@@ -146,12 +146,17 @@ $productos = obtenerResultados("SELECT * FROM productos ORDER BY id DESC");
     </header>
     
     <div class="container">
-        <div class="page-header">
-            <h2 class="page-title">Gestión de Productos</h2>
-            <a href="agregar-producto.php" class="btn">
-                <i class="fas fa-plus"></i> Agregar Producto
-            </a>
-        </div>
+    <div class="page-header">
+    <h2 class="page-title">Gestión de Productos</h2>
+    <div style="display: flex; gap: 10px;">
+        <a href="agregar-producto.php" class="btn">
+            <i class="fas fa-plus"></i> Agregar Producto
+        </a>
+        <a href="importar-productos.php" class="btn">
+            <i class="fas fa-file-import"></i> Importar CSV
+        </a>
+    </div>
+</div>
         
         <?php if (isset($_GET['mensaje'])): ?>
             <div class="message">
