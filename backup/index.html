@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Configuración básica del documento -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bear.Shop - Tienda Online</title>
+    <!-- Enlaces a hojas de estilo -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.cdnfonts.com/css/bogart" rel="stylesheet">
+</head>
+<body>
+    <!-- Encabezado del sitio con navegación -->
+    <header>
+        <div class="container">
+            <!-- Logo del sitio -->
+            <div class="logo">
+                <h1>BEAR</h1>
+            </div>
+            <!-- Menú de navegación principal -->
+            <nav>
+                <ul class="menu">
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#productos">Productos</a></li>
+                    <li><a href="#carrito">Carrito</a></li>
+                </ul>
+            </nav>
+            <!-- Iconos de funcionalidad (búsqueda, usuario, carrito) -->
+            <div class="icons">
+                <a href="#" class="icon" id="search-icon"><i class="fas fa-search"></i></a>
+                <a href="#" class="icon"><i class="fas fa-user"></i></a>
+                <a href="#carrito" class="icon" id="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+                <!-- Botón de menú para móviles -->
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sección de novedades/promociones con imágenes rotativas -->
+    <section class="news-slider">
+        <div class="container">
+            <div class="slider-container">
+                <div class="slider" id="news-slider">
+                    <!-- Las imágenes se cargarán dinámicamente con JavaScript -->
+                    <div class="slide active">
+                        <img src="promos/banner1.jpg" alt="Promoción 1">
+                    </div>
+                    <div class="slide">
+                        <img src="promos/banner2.jpg" alt="Promoción 2">
+                    </div>
+                    <div class="slide">
+                        <img src="promos/banner3.jpg" alt="Nuevos ingresos">
+                    </div>
+                    <div class="slide">
+                        <img src="promos/banner4.jpg" alt="Oferta especial">
+                    </div>
+                </div>
+                <!-- Indicadores de posición del slider -->
+                <div class="slider-indicators" id="slider-indicators">
+                    <span class="indicator active" data-index="0"></span>
+                    <span class="indicator" data-index="1"></span>
+                    <span class="indicator" data-index="2"></span>
+                    <span class="indicator" data-index="3"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección hero con imagen principal y buscador -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+               <img src="img/logo-png.png" alt="bear-shop" class="logo">
+               
+               <!-- Buscador de productos -->
+               <div class="search-container">
+                   <input type="text" id="product-search" placeholder="Buscar productos...">
+                   <button id="search-btn"><i class="fas fa-search"></i></button>
+               </div>
+               
+                <a href="#productos" class="btn">Ver productos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de productos -->
+    <section id="productos" class="products">
+        <div class="container">
+            <h2 class="section-title">Nuestros Productos</h2>
+            
+            <!-- Filtros de búsqueda -->
+            <div class="filter-results" id="filter-results" style="display: none;">
+                <h3>Resultados de búsqueda: <span id="search-term"></span></h3>
+                <button id="clear-search" class="btn-small">Limpiar búsqueda</button>
+            </div>
+            
+            <!-- Contenedor de productos -->
+            <div class="product-grid" id="product-grid">
+                <!-- Los productos se cargarán dinámicamente con JavaScript -->
+            </div>
+            <div class="view-more">
+                <a href="#" class="btn" id="load-more">Ver más productos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de categorías de productos -->
+    <section id="categorias" class="categories">
+        <div class="container">
+            <h2 class="section-title">Categorías</h2>
+            <div class="category-grid">
+                <!-- Tarjetas de categorías clickeables -->
+                <div class="category-card" data-category="skincare">
+                    <img src="img/skin.jpg" alt="Categoría 1">
+                    <h3>Skin Care</h3>
+                </div>
+                <div class="category-card" data-category="maquillaje">
+                    <img src="img/maquillaje.png" alt="Categoría 2">
+                    <h3>Maquillaje</h3>
+                </div>
+                <div class="category-card" data-category="accesorios">
+                    <img src="img/accesorios.png" alt="Categoría 3">
+                    <h3>Accesorios</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de carrito de compras -->
+    <section id="carrito" class="cart-section">
+        <div class="container">
+            <h2 class="section-title">Tu Carrito de Compras</h2>
+            <div class="cart-content">
+                <!-- Contenedor de items del carrito -->
+                <div class="cart-items" id="cart-items">
+                    <!-- Los items del carrito se cargarán dinámicamente -->
+                    <div class="empty-cart" id="empty-cart">
+                        <i class="fas fa-shopping-cart fa-4x"></i>
+                        <p>Tu carrito está vacío</p>
+                        <a href="#productos" class="btn">Ver productos</a>
+                    </div>
+                </div>
+                
+                <!-- Resumen del carrito -->
+                <div class="cart-summary" id="cart-summary" style="display: none;">
+                    <h3>Resumen de compra</h3>
+                    <div class="summary-item">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Envío:</span>
+                        <span>Gratis</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>Total:</span>
+                        <span id="cart-total">$0.00</span>
+                    </div>
+                    
+                    <!-- Opciones de pago -->
+                    <div class="payment-methods">
+                        <h4>Método de pago:</h4>
+                        <div class="payment-options">
+                            <label>
+                                <input type="radio" name="payment" value="efectivo" checked>
+                                <span>Efectivo</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="payment" value="mercadopago">
+                                <span>Mercado Pago</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="payment" value="transferencia">
+                                <span>Transferencia Bancaria</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button id="checkout-btn" class="btn">Finalizar compra</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal para finalizar compra -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Finalizar Compra</h2>
+            
+            <img src="img/medios-pagos.jpg" alt="Medios de pago" class="checkout-payment-img">
+            
+          
+            
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="customer-name">Nombre completo</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Email</label>
+                    <input type="email" id="customer-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-cel">Telefono</label>
+                    <input type="celphone" id="customer-celphone" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-adress">Dirección</label>
+                    <input type="adress" id="customer-adress" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-cp">Codigo Postal</label>
+                    <input type="cp" id="customer-cp" required>
+                </div>
+                <button type="submit" class="btn">Enviar pedido</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal para detalles de producto -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content product-detail-modal">
+            <span class="close">&times;</span>
+            <div class="product-detail-content">
+                <div class="product-detail-image">
+                    <!-- La imagen se cargará dinámicamente -->
+                </div>
+                <div class="product-detail-info">
+                    <h2 id="modal-product-name"></h2>
+                    <p class="modal-product-price"></p>
+                    <div class="product-rating">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <span class="rating-count"></span>
+                    </div>
+                    <div class="product-description">
+                        <h3>Descripción</h3>
+                        <p id="modal-product-description"></p>
+                    </div>
+                    <div class="product-features">
+                        <h3>Características</h3>
+                        <ul id="modal-product-features">
+                            <!-- Las características se cargarán dinámicamente -->
+                        </ul>
+                    </div>
+                    <div class="product-usage">
+                        <h3>Modo de uso</h3>
+                        <p id="modal-product-usage"></p>
+                    </div>
+                    <div class="product-quantity">
+                        <h3>Cantidad</h3>
+                        <div class="quantity-control">
+                            <button class="quantity-btn decrease" id="modal-quantity-decrease">-</button>
+                            <input type="number" class="quantity-input" id="modal-quantity" value="1" min="1">
+                            <button class="quantity-btn increase" id="modal-quantity-increase">+</button>
+                        </div>
+                    </div>
+                    <button class="btn add-to-cart-modal" id="modal-add-to-cart">Agregar al carrito</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <!-- Logo del footer -->
+                <div class="footer-logo">
+                    <h2>BEAR</h2>
+                    <!-- Imágenes de medios de pago y envíos -->
+                    <div class="payment-shipping-methods">
+                        <div class="payment-methods-img">
+                            <h4>Medios de pago</h4>
+                            <img src="img/medios1.png" alt="Medios de pago" class="desktop-payment">
+                            <img src="img/medios2.png" alt="Medios de pago" class="mobile-payment">
+                        </div>
+                        <div class="shipping-methods-img">
+                            <h4>Envíos</h4>
+                            <img src="img/envio.png" alt="Métodos de envío">
+                        </div>
+                    </div>
+                </div>
+                <!-- Enlaces rápidos -->
+                <div class="footer-links">
+                    <h3>Enlaces rápidos</h3>
+                    <ul>
+                        <li><a href="#inicio">Inicio</a></li>
+                        <li><a href="#productos">Productos</a></li>
+                        <li><a href="#carrito">Carrito</a></li>
+                    </ul>
+                </div>
+                <!-- Formulario de newsletter -->
+                <div class="footer-newsletter">
+                    <h3>Suscríbete a nuestro newsletter</h3>
+                    <form>
+                        <input type="email" placeholder="Tu email">
+                        <button type="submit">Suscribirse</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Copyright -->
+            <div class="footer-bottom">
+                <p>&copy; 2025 BEAR. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script principal -->
+    <script src="script.js"></script>
+</body>
+</html>
+
