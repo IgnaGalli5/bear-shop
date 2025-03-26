@@ -15,7 +15,9 @@ $exito = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Obtener datos del formulario
     $nombre = escapar($_POST['nombre']);
-    $precio = (float)$_POST['precio'];
+    $precio_costo = (float)$_POST['precio_costo'];
+    $multiplicador = (float)$_POST['multiplicador'];
+    $precio = $precio_costo * $multiplicador;
     $cuotas = (int)$_POST['cuotas'];
     $precio_cuota = $precio / $cuotas;
     $categoria = escapar($_POST['categoria']);
@@ -24,17 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $modo_uso = escapar($_POST['modo_uso']);
     $calificacion = (float)$_POST['calificacion'];
     $num_calificaciones = (int)$_POST['num_calificaciones'];
-    
+
     // Manejar la imagen
     $imagen = 'productos/default.jpg'; // Imagen por defecto
-    
+
     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
         $archivo = $_FILES['imagen'];
         $nombre_archivo = $archivo['name'];
         $tipo_archivo = $archivo['type'];
         $tamano_archivo = $archivo['size'];
         $temp_archivo = $archivo['tmp_name'];
-        
+
         // Verificar tipo de archivo
         $extensiones_permitidas = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!in_array($tipo_archivo, $extensiones_permitidas)) {
@@ -45,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!file_exists($directorio_destino)) {
                 mkdir($directorio_destino, 0777, true);
             }
-            
+
             // Generar nombre único
             $nombre_unico = uniqid() . '_' . $nombre_archivo;
             $ruta_destino = $directorio_destino . $nombre_unico;
-            
+
             // Mover archivo
             if (move_uploaded_file($temp_archivo, $ruta_destino)) {
                 $imagen = 'productos/' . $nombre_unico;
@@ -58,24 +60,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    
+
     // Si no hay errores, insertar en la base de datos
-    if (empty($error)) {
-        $sql = "INSERT INTO productos (nombre, precio, cuotas, precio_cuota, imagen, categoria, descripcion, caracteristicas, modo_uso, calificacion, num_calificaciones) 
-                VALUES ('$nombre', $precio, $cuotas, $precio_cuota, '$imagen', '$categoria', '$descripcion', '$caracteristicas', '$modo_uso', $calificacion, $num_calificaciones)";
-        
-        if (query($sql)) {
-            $exito = 'Producto agregado correctamente.';
-            // Redireccionar después de 2 segundos
-            header('Refresh: 2; URL=productos.php?mensaje=Producto agregado correctamente');
-        } else {
-            $error = 'Error al agregar el producto.';
-        }
+    // Si no hay errores, insertar en la base de datos
+  if (empty($error)) {
+    $sql = "INSERT INTO productos (nombre, precio_costo, multiplicador, precio, cuotas, precio_cuota, imagen, categoria, descripcion, caracteristicas, modo_uso, calificacion, num_calificaciones) 
+            VALUES ('$nombre', $precio_costo, $multiplicador, $precio, $cuotas, $precio_cuota, '$imagen', '$categoria', '$descripcion', '$caracteristicas', '$modo_uso', $calificacion, $num_calificaciones)";
+    
+    if (query($sql)) {
+        $exito = 'Producto agregado correctamente.';
+        // Redireccionar después de 2 segundos
+        header('Refresh: 2; URL=productos.php?mensaje=Producto agregado correctamente');
+    } else {
+        $error = 'Error al agregar el producto.';
     }
+}
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -89,32 +93,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin: 0;
             padding: 0;
         }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
+
         header {
             background-color: #945a42;
             color: white;
             padding: 15px 0;
             margin-bottom: 30px;
         }
+
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
         }
+
         .logo h1 {
             margin: 0;
             font-size: 24px;
         }
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+
         .btn {
             background-color: #eec8a3;
             color: #945a42;
@@ -126,31 +136,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: bold;
             display: inline-block;
         }
+
         .btn:hover {
             background-color: #e5b78e;
         }
+
         .page-header {
             margin-bottom: 20px;
         }
+
         .page-title {
             color: #945a42;
             margin: 0 0 10px 0;
         }
+
         .form-container {
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 30px;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #333;
         }
+
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group select,
@@ -162,17 +179,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 16px;
             box-sizing: border-box;
         }
+
         .form-group textarea {
             min-height: 100px;
             resize: vertical;
         }
+
         .form-row {
             display: flex;
             gap: 15px;
         }
+
         .form-row .form-group {
             flex: 1;
         }
+
         .error-message {
             background-color: #ffebee;
             color: #c62828;
@@ -180,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 4px;
             margin-bottom: 20px;
         }
+
         .success-message {
             background-color: #e8f5e9;
             color: #2e7d32;
@@ -187,6 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 4px;
             margin-bottom: 20px;
         }
+
         .submit-btn {
             background-color: #945a42;
             color: white;
@@ -197,11 +220,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 16px;
             font-weight: bold;
         }
+
         .submit-btn:hover {
             background-color: #7a4a37;
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="header-content">
@@ -217,44 +242,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </header>
-    
+
     <div class="container">
         <div class="page-header">
             <h2 class="page-title">Agregar Nuevo Producto</h2>
             <p>Completa el formulario para agregar un nuevo producto a la tienda.</p>
         </div>
-        
+
         <?php if ($error): ?>
             <div class="error-message">
                 <?php echo $error; ?>
             </div>
         <?php endif; ?>
-        
+
         <?php if ($exito): ?>
             <div class="success-message">
                 <?php echo $exito; ?>
             </div>
         <?php endif; ?>
-        
+
         <div class="form-container">
             <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="nombre">Nombre del Producto *</label>
                     <input type="text" id="nombre" name="nombre" required>
                 </div>
-                
+
+
+
+               
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="precio">Precio *</label>
-                        <input type="number" id="precio" name="precio" step="0.01" required>
+                        <label for="precio_costo">Precio de Costo *</label>
+                        <input type="number" id="precio_costo" name="precio_costo" step="0.01" required>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label for="cuotas">Cuotas</label>
-                        <input type="number" id="cuotas" name="cuotas" value="3" min="1">
+                        <label for="multiplicador">Multiplicador</label>
+                        <input type="number" id="multiplicador" name="multiplicador" step="0.01" value="2.0" min="1.0">
+                        <small>Factor por el que se multiplica el costo para obtener el precio de venta</small>
                     </div>
                 </div>
-                
+
+                <div class="form-group">
+                    <label for="precio">Precio de Venta *</label>
+                    <input type="number" id="precio" name="precio" step="0.01" required readonly>
+                    <small>Este valor se calcula automáticamente (Costo × Multiplicador)</small>
+                </div>
+
                 <div class="form-group">
                     <label for="categoria">Categoría *</label>
                     <select id="categoria" name="categoria" required>
@@ -264,48 +299,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="accesorios">Accesorios</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="imagen">Imagen del Producto</label>
                     <input type="file" id="imagen" name="imagen">
                     <small>Formatos permitidos: JPG, PNG. Tamaño máximo: 2MB.</small>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="descripcion">Descripción *</label>
                     <textarea id="descripcion" name="descripcion" required></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="caracteristicas">Características</label>
                     <textarea id="caracteristicas" name="caracteristicas" placeholder="Escribe cada característica en una línea nueva"></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="modo_uso">Modo de Uso</label>
                     <textarea id="modo_uso" name="modo_uso"></textarea>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="calificacion">Calificación</label>
                         <input type="number" id="calificacion" name="calificacion" step="0.1" min="0" max="5" value="5.0">
                     </div>
-                    
-                  min="0" max="5" value="5.0">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="num_calificaciones">Número de Calificaciones</label>
-                        <input type="number" id="num_calificaciones" name="num_calificaciones" value="0" min="0">
-                    </div>
+
+                    min="0" max="5" value="5.0">
                 </div>
-                
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-save"></i> Guardar Producto
-                </button>
-            </form>
+
+                <div class="form-group">
+                    <label for="num_calificaciones">Número de Calificaciones</label>
+                    <input type="number" id="num_calificaciones" name="num_calificaciones" value="0" min="0">
+                </div>
         </div>
+
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Guardar Producto
+        </button>
+        </form>
     </div>
+    </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const precioCostoInput = document.getElementById('precio_costo');
+    const multiplicadorInput = document.getElementById('multiplicador');
+    const precioInput = document.getElementById('precio');
+    
+    // Función para calcular el precio
+    function calcularPrecio() {
+        const costo = parseFloat(precioCostoInput.value) || 0;
+        const multiplicador = parseFloat(multiplicadorInput.value) || 0;
+        
+        if (costo > 0 && multiplicador > 0) {
+            const precio = costo * multiplicador;
+            precioInput.value = precio.toFixed(2);
+        }
+    }
+    
+    // Eventos para recalcular el precio
+    precioCostoInput.addEventListener('input', calcularPrecio);
+    multiplicadorInput.addEventListener('input', calcularPrecio);
+});
+</script>
 </body>
+
 </html>

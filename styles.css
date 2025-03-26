@@ -86,6 +86,35 @@ img {
   font-size: 0.9rem;
 }
 
+/* Estilos para productos en promoción */
+.product-card.on-sale {
+  border: 2px solid #e91e63;
+  box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2);
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.9em;
+  margin-right: 8px;
+}
+
+.sale-price {
+  color: #e91e63;
+  font-weight: bold;
+}
+
+.sale-badge {
+  background-color: #e91e63;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 5px;
+}
+
 /* Header */
 header {
   background-color: var(--color-white);

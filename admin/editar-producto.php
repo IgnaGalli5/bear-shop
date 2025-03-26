@@ -32,7 +32,9 @@ $exito = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Obtener datos del formulario
     $nombre = escapar($_POST['nombre']);
-    $precio = (float)$_POST['precio'];
+    $precio_costo = (float)$_POST['precio_costo'];
+    $multiplicador = (float)$_POST['multiplicador'];
+    $precio = $precio_costo * $multiplicador;
     $cuotas = (int)$_POST['cuotas'];
     $precio_cuota = $precio / $cuotas;
     $categoria = escapar($_POST['categoria']);
@@ -78,33 +80,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Si no hay errores, actualizar en la base de datos
-    if (empty($error)) {
-        $sql = "UPDATE productos SET 
-                nombre = '$nombre', 
-                precio = $precio, 
-                cuotas = $cuotas, 
-                precio_cuota = $precio_cuota, 
-                imagen = '$imagen', 
-                categoria = '$categoria', 
-                descripcion = '$descripcion', 
-                caracteristicas = '$caracteristicas', 
-                modo_uso = '$modo_uso', 
-                calificacion = $calificacion, 
-                num_calificaciones = $num_calificaciones 
-                WHERE id = $id";
-        
-        if (query($sql)) {
-            $exito = 'Producto actualizado correctamente.';
-            // Actualizar datos del producto
-            $resultado = query("SELECT * FROM productos WHERE id = $id LIMIT 1");
-            $producto = $resultado->fetch_assoc();
-            // Redireccionar después de 2 segundos
-            header('Refresh: 2; URL=productos.php?mensaje=Producto actualizado correctamente');
-        } else {
-            $error = 'Error al actualizar el producto.';
-        }
+  if (empty($error)) {
+    $sql = "UPDATE productos SET 
+            nombre = '$nombre', 
+            precio_costo = $precio_costo,
+            multiplicador = $multiplicador,
+            precio = $precio, 
+            cuotas = $cuotas, 
+            precio_cuota = $precio_cuota, 
+            imagen = '$imagen', 
+            categoria = '$categoria', 
+            descripcion = '$descripcion', 
+            caracteristicas = '$caracteristicas', 
+            modo_uso = '$modo_uso', 
+            calificacion = $calificacion, 
+            num_calificaciones = $num_calificaciones 
+            WHERE id = $id";
+    
+    if (query($sql)) {
+        $exito = 'Producto actualizado correctamente.';
+        // Actualizar datos del producto
+        $resultado = query("SELECT * FROM productos WHERE id = $id LIMIT 1");
+        $producto = $resultado->fetch_assoc();
+        // Redireccionar después de 2 segundos
+        header('Refresh: 2; URL=productos.php?mensaje=Producto actualizado correctamente');
+    } else {
+        $error = 'Error al actualizar el producto.';
     }
 }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -284,15 +289,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="precio">Precio *</label>
-                        <input type="number" id="precio" name="precio" step="0.01" value="<?php echo $producto['precio']; ?>" required>
-                    </div>
+    <div class="form-group">
+        <label for="precio_costo">Precio de Costo *</label>
+        <input type="number" id="precio_costo" name="precio_costo" step="0.01" value="<?php echo $producto['precio_costo']; ?>" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="multiplicador">Multiplicador</label>
+        <input type="number" id="multiplicador" name="multiplicador" step="0.01" value="<?php echo $producto['multiplicador']; ?>" min="1.0">
+        <small>Factor por el que se multiplica el costo para obtener el precio de venta</small>
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="precio">Precio de Venta *</label>
+    <input type="number" id="precio" name="precio" step="0.01" value="<?php echo $producto['precio']; ?>" required readonly>
+    <small>Este valor se calcula automáticamente (Costo × Multiplicador)</small>
+</div>
                     
-                    <div class="form-group">
-                        <label for="cuotas">Cuotas</label>
-                        <input type="number" id="cuotas" name="cuotas" value="<?php echo $producto['cuotas']; ?>" min="1">
-                    </div>
+                  
                 </div>
                 
                 <div class="form-group">
@@ -350,5 +365,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const precioCostoInput = document.getElementById('precio_costo');
+    const multiplicadorInput = document.getElementById('multiplicador');
+    const precioInput = document.getElementById('precio');
+    
+    // Función para calcular el precio
+    function calcularPrecio() {
+        const costo = parseFloat(precioCostoInput.value) || 0;
+        const multiplicador = parseFloat(multiplicadorInput.value) || 0;
+        
+        if (costo > 0 && multiplicador > 0) {
+            const precio = costo * multiplicador;
+            precioInput.value = precio.toFixed(2);
+        }
+    }
+    
+    // Eventos para recalcular el precio
+    precioCostoInput.addEventListener('input', calcularPrecio);
+    multiplicadorInput.addEventListener('input', calcularPrecio);
+});
+</script>
 </body>
 </html>

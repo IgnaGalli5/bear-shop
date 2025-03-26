@@ -50,24 +50,41 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalAddToCart = document.getElementById("modal-add-to-cart")
 
   // Funciones
+  
 
   // Formatear precio: convierte un número a formato de moneda
   function formatPrice(price) {
     return "$" + price.toLocaleString("es-AR")
   }
 
-  // Renderizar productos: muestra los productos en la grilla
+  // Renderizar productos: muestra los productos en la grilla areglado recien
   function renderProducts() {
     if (!productGrid) return;
-    
+  
     productGrid.innerHTML = ""
-
+  
     const productsToShow = filteredProducts.slice(0, visibleProducts)
-
+  
     productsToShow.forEach((product) => {
       const productCard = document.createElement("div")
       productCard.className = "product-card"
+      if (product.onSale) {
+        productCard.classList.add("on-sale")
+      }
       productCard.setAttribute("data-id", product.id)
+      
+      // Crear HTML para el precio (normal o promocional)
+      let priceHTML = `<p class="price">${formatPrice(product.price)}</p>`;
+      if (product.onSale && product.originalPrice) {
+        priceHTML = `
+          <p class="price">
+            <span class="original-price">${formatPrice(product.originalPrice)}</span>
+            <span class="sale-price">${formatPrice(product.price)}</span>
+          </p>
+          <p class="sale-badge">¡OFERTA!</p>
+        `;
+      }
+      
       productCard.innerHTML = `
                   <div class="product-image">
                       <img src="${product.image}" alt="${product.name}">
@@ -77,8 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   </div>
                   <div class="product-info">
                       <h3>${product.name}</h3>
-                      <p class="price">${formatPrice(product.price)}<br>
-                          ${product.installments} cuotas sin interés de ${formatPrice(product.installmentPrice)}</p>
+                      ${priceHTML}
                       <button class="add-to-cart" data-id="${product.id}">Agregar al carrito</button>
                   </div>
               `
@@ -111,20 +127,21 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
+  
 
   // Abrir modal de producto: muestra los detalles de un producto
   function openProductModal(productId) {
     if (!productModal) return;
     
     const product = products.find((p) => p.id === productId)
-
+  
     if (!product) return
-
+  
     currentProductId = productId
-
+  
     // Actualizar contenido del modal
     if (modalProductName) modalProductName.textContent = product.name
-    if (modalProductPrice) modalProductPrice.textContent = `${formatPrice(product.price)} | ${product.installments} cuotas sin interés de ${formatPrice(product.installmentPrice)}`
+    if (modalProductPrice) modalProductPrice.textContent = formatPrice(product.price)
     if (modalProductDescription) modalProductDescription.textContent = product.description
     if (modalProductUsage) modalProductUsage.textContent = product.usage
     if (modalRatingCount) modalRatingCount.textContent = `(${product.ratingCount} reseñas)`

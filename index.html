@@ -117,15 +117,15 @@
             <div class="category-grid">
                 <!-- Tarjetas de categorías clickeables -->
                 <div class="category-card" data-category="skincare">
-                    <img src="img/skin.jpg" alt="Categoría 1">
+                    <img src="skincare.jpeg" alt="Categoría 1">
                     <h3>Skin Care</h3>
                 </div>
                 <div class="category-card" data-category="maquillaje">
-                    <img src="img/maquillaje.png" alt="Categoría 2">
+                    <img src="maquillaje.jpeg" alt="Categoría 2">
                     <h3>Maquillaje</h3>
                 </div>
                 <div class="category-card" data-category="accesorios">
-                    <img src="img/accesorios.png" alt="Categoría 3">
+                    <img src="accesorios.jpeg" alt="Categoría 3">
                     <h3>Accesorios</h3>
                 </div>
             </div>
@@ -304,13 +304,15 @@
                     </ul>
                 </div>
                 <!-- Formulario de newsletter -->
-                <div class="footer-newsletter">
-                    <h3>Suscríbete a nuestro newsletter</h3>
-                    <form>
-                        <input type="email" placeholder="Tu email">
-                        <button type="submit">Suscribirse</button>
-                    </form>
-                </div>
+                <div class="newsletter">
+                <h3>Suscríbete a nuestro Newsletter</h3>
+                <p>Recibe nuestras promociones y novedades</p>
+                <form id="newsletter-form">
+                    <input type="email" id="newsletter-email" placeholder="Tu email" required>
+                    <button type="submit">Suscribirse</button>
+                </form>
+                <div id="newsletter-message"></div>
+            </div>
             </div>
             <!-- Copyright -->
             <div class="footer-bottom">
@@ -321,6 +323,36 @@
 
     <!-- Script principal -->
     <script src="script.js"></script>
+    <script>
+        document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('newsletter-email').value;
+            const messageDiv = document.getElementById('newsletter-message');
+            
+            // Enviar solicitud
+            fetch('api/suscribir.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'email=' + encodeURIComponent(email)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exito) {
+                    messageDiv.innerHTML = '<p class="success">' + data.mensaje + '</p>';
+                    document.getElementById('newsletter-email').value = '';
+                } else {
+                    messageDiv.innerHTML = '<p class="error">' + data.mensaje + '</p>';
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = '<p class="error">Error al procesar la solicitud</p>';
+                console.error('Error:', error);
+            });
+        });
+        </script>
 </body>
 </html>
 

@@ -107,7 +107,7 @@ $totalProductos = obtenerResultados("SELECT COUNT(*) as total FROM productos")[0
                 <h1>BEAR SHOP - ADMIN</h1>
             </div>
             <div class="user-info">
-                <span>Bienvenido, <?php echo $_SESSION['admin_nombre']; ?></span>
+                <span>Bienvenida Shamira, <?php echo $_SESSION['admin_nombre']; ?></span>
                 <a href="logout.php" class="btn">Cerrar Sesión</a>
             </div>
         </div>
@@ -121,11 +121,18 @@ $totalProductos = obtenerResultados("SELECT COUNT(*) as total FROM productos")[0
             </div>
         </div>
         
+        
         <div class="main-actions">
             <a href="productos.php" class="btn">
                 <i class="fas fa-box"></i> Gestionar Productos
             </a>
-        </div>
+            <a href="newsletters.php" class="btn">
+                <i class="fas fa-envelope"></i> Gestionar Newsletters
+            </a>
+            <a href="promociones.php" class="btn">
+                <i class="fas fa-tag"></i> Gestionar Promociones
+</a>    
+</div>
     </div>
 </body>
 </html>
