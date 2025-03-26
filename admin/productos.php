@@ -250,42 +250,52 @@ $productos = obtenerResultados("SELECT * FROM productos $condicion_busqueda ORDE
                     <th>ID</th>
                     <th>Imagen</th>
                     <th>Nombre</th>
-                    <th>Precio</th>
                     <th>Categoría</th>
+                    <th>Precio Costo</th>
+                    <th>Multiplicador</th>
+                    <th>Precio Venta</th>
+                    <th>Margen</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($productos as $producto): ?>
-                    <tr>
-                        <td><?php echo $producto['id']; ?></td>
-                        <td>
-                            <img src="../<?php echo $producto['imagen']; ?>" alt="<?php echo $producto['nombre']; ?>" class="product-image">
-                        </td>
-                        <td><?php echo $producto['nombre']; ?></td>
-                        <td>$<?php echo number_format($producto['precio'], 2, ',', '.'); ?></td>
-                        <td><?php echo $producto['categoria']; ?></td>
-                        <td class="actions">
-                            <a href="editar-producto.php?id=<?php echo $producto['id']; ?>" class="btn">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-                            <a href="productos.php?eliminar=<?php echo $producto['id']; ?>" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar este producto?')">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+                <?php foreach ($productos as $producto): 
+        // Calcular el margen de ganancia
+        $margen = $producto['precio_costo'] > 0 ? (($producto['precio'] / $producto['precio_costo']) - 1) * 100 : 0;
+    ?>
+        <tr>
+            <td><?php echo $producto['id']; ?></td>
+            <td>
+                <img src="../<?php echo $producto['imagen']; ?>" alt="<?php echo $producto['nombre']; ?>" class="product-image">
+            </td>
+            <td><?php echo $producto['nombre']; ?></td>
+            <td><?php echo $producto['categoria']; ?></td>
+            <td><?php echo $producto['precio_costo'] ? '$' . number_format($producto['precio_costo'], 2, ',', '.') : 'No definido'; ?></td>
+            <td><?php echo $producto['multiplicador'] ? number_format($producto['multiplicador'], 2, ',', '.') . 'x' : '-'; ?></td>
+            <td>$<?php echo number_format($producto['precio'], 2, ',', '.'); ?></td>
+            <td><?php echo $producto['precio_costo'] > 0 ? number_format($margen, 0) . '%' : '-'; ?></td>
+            <td class="actions">
+                <a href="editar-producto.php?id=<?php echo $producto['id']; ?>" class="btn">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a href="productos.php?eliminar=<?php echo $producto['id']; ?>" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar este producto?')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
 
-                <?php if (empty($productos)): ?>
-                    <tr>
-                        <td colspan="6" style="text-align: center;">
-                            <?php echo !empty($busqueda) ? 'No se encontraron productos que coincidan con la búsqueda.' : 'No hay productos registrados'; ?>
-                        </td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
+    <?php if (empty($productos)): ?>
+        <tr>
+            <td colspan="9" style="text-align: center;">
+                <?php echo !empty($busqueda) ? 'No se encontraron productos que coincidan con la búsqueda.' : 'No hay productos registrados'; ?>
+            </td>
+        </tr>
+    <?php endif; ?>
+</tbody>
         </table>
     </div>
 </body>
 
 </html>
+

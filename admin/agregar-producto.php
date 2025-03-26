@@ -27,6 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $calificacion = (float)$_POST['calificacion'];
     $num_calificaciones = (int)$_POST['num_calificaciones'];
 
+    // Validaciones
+    if (empty($nombre)) {
+        $error = 'El nombre del producto es obligatorio.';
+    } else if ($precio_costo <= 0) {
+        $error = 'El precio de costo debe ser mayor que cero.';
+    } else if ($multiplicador <= 0) {
+        $error = 'El multiplicador debe ser mayor que cero.';
+    }
+
     // Manejar la imagen
     $imagen = 'productos/default.jpg'; // Imagen por defecto
 
@@ -274,7 +283,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-row">
                     <div class="form-group">
                         <label for="precio_costo">Precio de Costo *</label>
-                        <input type="number" id="precio_costo" name="precio_costo" step="0.01" required>
+                        <input type="number" id="precio_costo" name="precio_costo" step="0.01" min="0.01" required>
+                        <small>Este valor es obligatorio y debe ser mayor que cero.</small>
                     </div>
 
                     <div class="form-group">
@@ -367,3 +377,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </body>
 
 </html>
+

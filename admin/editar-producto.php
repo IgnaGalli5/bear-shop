@@ -78,6 +78,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
+    // Modificar la sección de validación en el procesamiento del formulario (cerca de la línea 30)
+    // Agregar esta validación después de obtener los datos del formulario
+
+    if (empty($nombre)) {
+        $error = 'El nombre del producto es obligatorio.';
+    } else if ($precio_costo <= 0) {
+        $error = 'El precio de costo debe ser mayor que cero.';
+    } else if ($multiplicador <= 0) {
+        $error = 'El multiplicador debe ser mayor que cero.';
+    }
+
     // Si no hay errores, actualizar en la base de datos
   if (empty($error)) {
     $sql = "UPDATE productos SET 
@@ -289,7 +300,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-row">
     <div class="form-group">
         <label for="precio_costo">Precio de Costo *</label>
-        <input type="number" id="precio_costo" name="precio_costo" step="0.01" value="<?php echo $producto['precio_costo']; ?>" required>
+        <input type="number" id="precio_costo" name="precio_costo" step="0.01" min="0.01" value="<?php echo $producto['precio_costo']; ?>" required>
+        <small>Este valor es obligatorio y debe ser mayor que cero.</small>
     </div>
     
     <div class="form-group">
@@ -388,3 +400,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+

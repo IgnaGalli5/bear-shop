@@ -11,6 +11,30 @@ if (!isset($_SESSION['admin_id'])) {
 $mensaje = '';
 $error = '';
 
+// Limpiar historial de cambios
+if (isset($_POST['limpiar_historial'])) {
+    // Eliminar archivos de log
+    $archivos_log = glob('../logs/*.txt');
+    foreach ($archivos_log as $archivo) {
+        if (file_exists($archivo)) {
+            unlink($archivo);
+        }
+    }
+    
+    // Limpiar tabla de historial
+    query("TRUNCATE TABLE historial_precios");
+    
+    $mensaje = "El historial de cambios de precios ha sido eliminado correctamente.";
+    
+    // Recargar historial (ahora vacío)
+    $historial = obtenerResultados("
+        SELECT h.*
+        FROM historial_precios h
+        ORDER BY h.fecha DESC
+        LIMIT 10
+    ");
+}
+
 // Obtener categorías únicas
 $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos ORDER BY categoria");
 
@@ -271,6 +295,9 @@ $historial = obtenerResultados("
     ORDER BY h.fecha DESC
     LIMIT 10
 ");
+
+// Definir precio de costo para el ejemplo
+$precio_costo = 1000; // Valor fijo para el ejemplo
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -356,6 +383,14 @@ $historial = obtenerResultados("
         .btn-sm {
             padding: 5px 10px;
             font-size: 14px;
+        }
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+            border-color: #d32f2f;
+        }
+        .btn-danger:hover {
+            background-color: #d32f2f;
         }
         
         /* Tarjetas y contenedores */
@@ -733,7 +768,7 @@ $historial = obtenerResultados("
                             <?php foreach ($categorias as $categoria): 
                                 $cat = $categoria['categoria'];
                                 $multiplicador = isset($margenes_por_categoria[$cat]) ? $margenes_por_categoria[$cat] : 2.0;
-                                $precio_ejemplo = 1000 * $multiplicador;
+                                $precio_venta = $precio_costo * $multiplicador;
                                 $porcentaje = ($multiplicador - 1) * 100;
                             ?>
                                 <tr>
@@ -749,7 +784,7 @@ $historial = obtenerResultados("
                                                required>
                                     </td>
                                     <td>
-                                        $1000 → $<span class="precio-ejemplo" id="precio_<?php echo $cat; ?>"><?php echo number_format($precio_ejemplo, 0, '.', ''); ?></span>
+                                        $1000 → $<span class="precio-ejemplo" id="precio_<?php echo $cat; ?>"><?php echo number_format($precio_costo * $multiplicador, 0, '.', ''); ?></span>
                                     </td>
                                     <td>
                                         <span class="porcentaje" id="porcentaje_<?php echo $cat; ?>"><?php echo number_format($porcentaje, 0, '.', ''); ?></span>%
@@ -895,9 +930,16 @@ $historial = obtenerResultados("
                     </tbody>
                 </table>
                 
-                <a href="historial-completo.php" class="btn btn-outline">
-                    <i class="fas fa-history"></i> Ver Historial Completo
-                </a>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <a href="historial-completo.php" class="btn btn-outline">
+                        <i class="fas fa-history"></i> Ver Historial Completo
+                    </a>
+                    
+                    <!-- Botón para limpiar historial -->
+                    <button type="button" class="btn btn-outline btn-danger limpiar-historial">
+                        <i class="fas fa-trash"></i> Limpiar Historial
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -956,6 +998,29 @@ $historial = obtenerResultados("
             <button type="button" class="btn btn-outline cerrar-modal">
                 <i class="fas fa-times"></i> Cerrar
             </button>
+        </div>
+    </div>
+    
+    <!-- Modal para confirmar limpieza de historial -->
+    <div id="modal_limpiar_historial" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Confirmar Limpieza de Historial</h3>
+        
+            <p>Esta acción eliminará permanentemente todos los registros del historial de cambios de precios. Esta acción no se puede deshacer.</p>
+        
+            <form method="POST" id="form_limpiar_historial">
+                <input type="hidden" name="limpiar_historial" value="1">
+            
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirmar Limpieza
+                    </button>
+                    <button type="button" class="btn btn-outline cerrar-modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -1033,8 +1098,10 @@ $historial = obtenerResultados("
             // Modal para editar precio
             const modal = document.getElementById('modal_editar_precio');
             const modalDetalles = document.getElementById('modal_detalles');
+            const modalLimpiarHistorial = document.getElementById('modal_limpiar_historial');
             const botonesEditar = document.querySelectorAll('.editar-precio');
             const botonesVerDetalles = document.querySelectorAll('.ver-detalles');
+            const botonLimpiarHistorial = document.querySelector('.limpiar-historial');
             const botonesCerrar = document.querySelectorAll('.close, .cerrar-modal');
             
             // Abrir modal de edición
@@ -1074,11 +1141,19 @@ $historial = obtenerResultados("
                 });
             });
             
+            // Abrir modal de limpiar historial
+            if (botonLimpiarHistorial) {
+                botonLimpiarHistorial.addEventListener('click', function() {
+                    modalLimpiarHistorial.style.display = 'block';
+                });
+            }
+            
             // Cerrar modales
             botonesCerrar.forEach(function(boton) {
                 boton.addEventListener('click', function() {
                     modal.style.display = 'none';
                     modalDetalles.style.display = 'none';
+                    modalLimpiarHistorial.style.display = 'none';
                 });
             });
             
@@ -1089,6 +1164,9 @@ $historial = obtenerResultados("
                 }
                 if (event.target == modalDetalles) {
                     modalDetalles.style.display = 'none';
+                }
+                if (event.target == modalLimpiarHistorial) {
+                    modalLimpiarHistorial.style.display = 'none';
                 }
             });
             
@@ -1126,3 +1204,4 @@ $historial = obtenerResultados("
     </script>
 </body>
 </html>
+
