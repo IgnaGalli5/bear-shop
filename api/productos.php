@@ -5,6 +5,11 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Añadir estas líneas para evitar el caché
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+
 // Si es una solicitud OPTIONS (preflight), terminar aquí
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -73,6 +78,8 @@ try {
             'ratingCount' => isset($producto['num_calificaciones']) ? (int)$producto['num_calificaciones'] : 0
         ];
     }
+
+    
 
     // OPCIÓN 1: Solo devolver los productos (recomendado para producción)
     echo json_encode($productosFormateados, JSON_UNESCAPED_UNICODE);

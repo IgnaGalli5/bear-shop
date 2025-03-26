@@ -525,25 +525,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if (mobileCloseBtn) mobileCloseBtn.style.display = "none"
   }
 
-  // Cargar productos desde la API
-  async function cargarProductos() {
-    try {
-      const response = await fetch('http://localhost/bear_shop/api/productos.php');
-      if (!response.ok) {
-        throw new Error('Error al cargar los productos');
-      }
-      
-      products = await response.json();
-      filteredProducts = [...products]; // INICIALIZAR AQUÍ DESPUÉS DE CARGAR
-      
-      // Renderizar productos una vez cargados
-      renderProducts();
-      
-    } catch (error) {
-      console.error('Error:', error);
-      showNotification('No se pudieron cargar los productos. Intenta de nuevo más tarde.');
+// Cargar productos desde la API
+async function cargarProductos() {
+  try {
+    // Añadir un parámetro de tiempo para evitar el caché
+    const timestamp = new Date().getTime();
+    const response = await fetch(`http://localhost/bear_shop/api/productos.php?t=${timestamp}`);
+    if (!response.ok) {
+      throw new Error('Error al cargar los productos');
     }
+    
+    products = await response.json();
+    filteredProducts = [...products];
+    
+    // Renderizar productos una vez cargados
+    renderProducts();
+    
+  } catch (error) {
+    console.error('Error:', error);
+    showNotification('No se pudieron cargar los productos. Intenta de nuevo más tarde.');
   }
+}
 
   // Agregar función para guardar el carrito en localStorage
   function saveCart() {
@@ -742,6 +744,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   })
+  
 
   // Inicializar
   cargarProductos() // Cargar productos desde la API

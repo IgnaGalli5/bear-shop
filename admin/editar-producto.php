@@ -35,8 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $precio_costo = (float)$_POST['precio_costo'];
     $multiplicador = (float)$_POST['multiplicador'];
     $precio = $precio_costo * $multiplicador;
-    $cuotas = (int)$_POST['cuotas'];
-    $precio_cuota = $precio / $cuotas;
+  
     $categoria = escapar($_POST['categoria']);
     $descripcion = escapar($_POST['descripcion']);
     $caracteristicas = escapar($_POST['caracteristicas']);
@@ -86,8 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             precio_costo = $precio_costo,
             multiplicador = $multiplicador,
             precio = $precio, 
-            cuotas = $cuotas, 
-            precio_cuota = $precio_cuota, 
+            
             imagen = '$imagen', 
             categoria = '$categoria', 
             descripcion = '$descripcion', 

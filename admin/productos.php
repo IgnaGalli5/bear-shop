@@ -217,9 +217,7 @@ $productos = obtenerResultados("SELECT * FROM productos $condicion_busqueda ORDE
                 <a href="importar-productos.php" class="btn">
                     <i class="fas fa-file-import"></i> Importar CSV
                 </a>
-                <a href="actualizar-precios.php" class="btn">
-                    <i class="fas fa-tags"></i> Actualizar Precios
-                </a>
+            
             </div>
         </div>
 

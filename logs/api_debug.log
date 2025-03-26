@@ -1,0 +1,62 @@
+{
+    "tiempo": "2025-03-26 22:39:30",
+    "muestra_productos": [
+        {
+            "id": 2,
+            "name": "Caja pads algodon suave sin pelusa 150pc #20082",
+            "price": 6200,
+            "originalPrice": null,
+            "onSale": false,
+            "installments": 1,
+            "installmentPrice": 6200,
+            "image": "productos\/67e223e1602f4_cajaPadsAlgodon.jpg",
+            "category": "skincare",
+            "description": "Caja pads algodon suave sin pelusa 150pc #20082 - Skincare",
+            "features": [
+                "Producto de Skincare\r",
+                "Producto de calidad"
+            ],
+            "usage": "-",
+            "rating": 5,
+            "ratingCount": 0
+        },
+        {
+            "id": 3,
+            "name": "Caja x10u parches removedor puntos negros Ymxercos",
+            "price": 1800,
+            "originalPrice": null,
+            "onSale": false,
+            "installments": 1,
+            "installmentPrice": 1800,
+            "image": "productos\/67e223af52c7f_parchesx10.jpg",
+            "category": "skincare",
+            "description": "Caja x10u parches removedor puntos negros Ymxercos - Skincare",
+            "features": [
+                "Producto de Skincare\r",
+                "Producto de calidad"
+            ],
+            "usage": "-",
+            "rating": 5,
+            "ratingCount": 0
+        },
+        {
+            "id": 4,
+            "name": "Caja parche para acne 48pc Kormesic",
+            "price": 2700,
+            "originalPrice": null,
+            "onSale": false,
+            "installments": 1,
+            "installmentPrice": 2700,
+            "image": "productos\/67e224076003e_cajaParcheACne.jpeg",
+            "category": "skincare",
+            "description": "Caja parche para acne 48pc Kormesic - Skincare",
+            "features": [
+                "Producto de Skincare\r",
+                "Producto de calidad"
+            ],
+            "usage": "-",
+            "rating": 5,
+            "ratingCount": 0
+        }
+    ]
+}

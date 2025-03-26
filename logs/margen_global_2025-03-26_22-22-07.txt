@@ -1,0 +1,15 @@
+Actualización de margen global - 2025-03-26 22:22:07
+Multiplicador global: 2
+----------------------------------------
+Categoría: accesorios
+Multiplicador anterior: 2.00
+Nuevo multiplicador: 2
+----------------------------------------
+Categoría: maquillaje
+Multiplicador anterior: N/A
+Nuevo multiplicador: 2
+----------------------------------------
+Categoría: skincare
+Multiplicador anterior: N/A
+Nuevo multiplicador: 2
+----------------------------------------
