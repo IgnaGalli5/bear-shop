@@ -70,7 +70,7 @@ $fechas = obtenerResultados("
     <title>Historial de Cambios de Precios - Bear Shop</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Estilos similares a gestionar-margenes.php */
+        /* Estilos base */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f5f5f5;
@@ -204,6 +204,7 @@ $fechas = obtenerResultados("
             justify-content: center;
             gap: 5px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .pagination a, .pagination span {
             padding: 8px 12px;
@@ -248,6 +249,176 @@ $fechas = obtenerResultados("
         }
         .close:hover {
             color: #333;
+        }
+        .text-center {
+            text-align: center;
+        }
+        
+        /* Estilos responsivos */
+        @media (max-width: 992px) {
+            .container {
+                padding: 15px;
+            }
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .logo {
+                margin-bottom: 10px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
+            .page-title {
+                font-size: 22px;
+                text-align: center;
+            }
+            
+            .page-header p {
+                text-align: center;
+                font-size: 14px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+            
+            .filter-group label {
+                margin-bottom: 5px;
+            }
+            
+            .filter-group select, 
+            .filter-group input {
+                width: 100%;
+            }
+            
+            .filters .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            /* Ajustes para tablas en móvil */
+            .table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .table th, 
+            .table td {
+                padding: 8px 10px;
+            }
+            
+            /* Ocultar columna de administrador en móvil */
+            .table th:nth-child(2), 
+            .table td:nth-child(2) {
+                display: none;
+            }
+            
+            /* Ajustar tamaño de modal en móvil */
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 15px;
+            }
+            
+            /* Ajustar paginación en móvil */
+            .pagination {
+                gap: 3px;
+            }
+            
+            .pagination a, 
+            .pagination span {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card {
+                padding: 15px;
+            }
+            
+            .table th, 
+            .table td {
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+            
+            /* Ajustar badges en móvil */
+            .badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+            
+            /* Ajustar botones en móvil */
+            .btn-sm {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+            
+            /* Ajustar paginación en móvil pequeño */
+            .pagination a, 
+            .pagination span {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+            
+            /* Ajustar contenido del modal */
+            #detalles_contenido {
+                font-size: 12px;
+                max-height: 300px;
+            }
+        }
+        
+        /* Estilos para el botón flotante de volver */
+        .mobile-back-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #945a42;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            border: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-back-btn {
+                display: flex;
+            }
         }
     </style>
 </head>
@@ -387,10 +558,10 @@ $fechas = obtenerResultados("
             <?php if ($total_paginas > 1): ?>
                 <div class="pagination">
                     <?php if ($pagina > 1): ?>
-                        <a href="?pagina=1<?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>">
+                        <a href="?pagina=1<?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>" aria-label="Primera página">
                             <i class="fas fa-angle-double-left"></i>
                         </a>
-                        <a href="?pagina=<?php echo $pagina - 1; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>">
+                        <a href="?pagina=<?php echo $pagina - 1; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>" aria-label="Página anterior">
                             <i class="fas fa-angle-left"></i>
                         </a>
                     <?php endif; ?>
@@ -400,19 +571,26 @@ $fechas = obtenerResultados("
                     $fin = min($total_paginas, $pagina + 2);
                     
                     for ($i = $inicio; $i <= $fin; $i++): ?>
-                        <a href="?pagina=<?php echo $i; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>" class="<?php echo $i == $pagina ? 'active' : ''; ?>">
+                        <a href="?pagina=<?php echo $i; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>" class="<?php echo $i == $pagina ? 'active' : ''; ?>" aria-label="Página <?php echo $i; ?>" <?php echo $i == $pagina ? 'aria-current="page"' : ''; ?>>
                             <?php echo $i; ?>
                         </a>
                     <?php endfor; ?>
                     
                     <?php if ($pagina < $total_paginas): ?>
-                        <a href="?pagina=<?php echo $pagina + 1; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>">
+                        <a href="?pagina=<?php echo $pagina + 1; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>" aria-label="Página siguiente">
                             <i class="fas fa-angle-right"></i>
                         </a>
-                        <a href="?pagina=<?php echo $total_paginas; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>">
+                        <a href="?pagina=<?php echo $total_paginas; ?><?php echo $filtro_tipo ? '&tipo=' . $filtro_tipo : ''; ?><?php echo $filtro_fecha ? '&fecha=' . $filtro_fecha : ''; ?>" aria-label="Última página">
                             <i class="fas fa-angle-double-right"></i>
                         </a>
                     <?php endif; ?>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Información de paginación para móvil -->
+            <?php if ($total_paginas > 1): ?>
+                <div class="text-center" style="margin-top: 10px; font-size: 14px; color: #666;">
+                    Página <?php echo $pagina; ?> de <?php echo $total_paginas; ?> (<?php echo $total_registros; ?> registros)
                 </div>
             <?php endif; ?>
         </div>
@@ -432,6 +610,11 @@ $fechas = obtenerResultados("
         </div>
     </div>
     
+    <!-- Botón flotante para volver en móvil -->
+    <a href="gestionar-margenes.php" class="mobile-back-btn" aria-label="Volver a Márgenes">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Modal para ver detalles
@@ -450,6 +633,9 @@ $fechas = obtenerResultados("
                         .then(data => {
                             document.getElementById('detalles_contenido').textContent = data;
                             modal.style.display = 'block';
+                            
+                            // Hacer scroll al inicio del contenido
+                            document.getElementById('detalles_contenido').scrollTop = 0;
                         })
                         .catch(error => {
                             alert('Error al cargar los detalles: ' + error);
@@ -468,6 +654,37 @@ $fechas = obtenerResultados("
             window.addEventListener('click', function(event) {
                 if (event.target == modal) {
                     modal.style.display = 'none';
+                }
+            });
+            
+            // Cerrar modal con la tecla Escape
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && modal.style.display === 'block') {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Mejorar accesibilidad del modal
+            const modalContent = modal.querySelector('.modal-content');
+            
+            // Mantener el foco dentro del modal
+            modalContent.addEventListener('keydown', function(event) {
+                if (event.key === 'Tab') {
+                    const focusableElements = modalContent.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                    const firstElement = focusableElements[0];
+                    const lastElement = focusableElements[focusableElements.length - 1];
+                    
+                    if (event.shiftKey) {
+                        if (document.activeElement === firstElement) {
+                            lastElement.focus();
+                            event.preventDefault();
+                        }
+                    } else {
+                        if (document.activeElement === lastElement) {
+                            firstElement.focus();
+                            event.preventDefault();
+                        }
+                    }
                 }
             });
         });

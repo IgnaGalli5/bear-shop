@@ -330,13 +330,134 @@ $nombres_meses = [
             flex: 1;
         }
         
-        /* Responsive */
-        @media (max-width: 768px) {
+        /* Estilos responsivos */
+        .mobile-hidden {
+            display: table-cell;
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* Media queries para responsividad */
+        @media screen and (max-width: 992px) {
+            .header-content {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .logo {
+                margin-bottom: 10px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .logo h1 {
+                font-size: 20px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
+            
             .flex-row {
                 flex-direction: column;
+            }
+            
+            .page-title {
+                font-size: 24px;
+            }
+            
+            .card-value {
+                font-size: 20px;
+            }
+            
+            /* Convertir tabla a formato móvil */
+            .table thead {
+                display: none;
+            }
+            
+            .table tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            
+            .table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 10px;
+                text-align: right;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .table tbody td:last-child {
+                border-bottom: none;
+            }
+            
+            .table tbody td:before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-align: left;
+                margin-right: auto;
+            }
+        }
+        
+        /* Botón flotante para móvil */
+        .mobile-fab {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #945a42;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .mobile-fab {
+                display: flex;
             }
         }
     </style>
@@ -350,6 +471,9 @@ $nombres_meses = [
             <div class="user-info">
                 <a href="productos.php" class="btn">
                     <i class="fas fa-box"></i> Productos
+                </a>
+                <a href="promociones.php" class="btn">
+                    <i class="fas fa-tag"></i> Promociones
                 </a>
                 <a href="gestionar-margenes.php" class="btn">
                     <i class="fas fa-percentage"></i> Márgenes
@@ -471,9 +595,9 @@ $nombres_meses = [
                             <?php else: ?>
                                 <?php foreach ($productos_mas_vendidos as $producto): ?>
                                     <tr>
-                                        <td><?php echo $producto['nombre']; ?></td>
-                                        <td style="text-transform: capitalize;"><?php echo $producto['categoria']; ?></td>
-                                        <td><?php echo $producto['total_vendido']; ?></td>
+                                        <td data-label="Producto"><?php echo $producto['nombre']; ?></td>
+                                        <td data-label="Categoría" style="text-transform: capitalize;"><?php echo $producto['categoria']; ?></td>
+                                        <td data-label="Unidades Vendidas"><?php echo $producto['total_vendido']; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -488,7 +612,7 @@ $nombres_meses = [
                 <i class="fas fa-chart-line" style="font-size: 48px; color: #945a42; margin-bottom: 20px;"></i>
                 <h3 style="margin-bottom: 15px;">Configurar Sistema de Ventas</h3>
                 <p style="margin-bottom: 20px;">Para habilitar el seguimiento de ventas y estadísticas, necesitas configurar las tablas de pedidos en la base de datos.</p>
-                <a href="#" class="btn btn-primary" onclick="alert('Esta funcionalidad requiere configuración adicional. Contacta al desarrollador.')">
+                <a href="crear-columnas.php" class="btn btn-primary">
                     <i class="fas fa-cog"></i> Configurar Sistema
                 </a>
             </div>
@@ -527,17 +651,17 @@ $nombres_meses = [
                                     <?php else: ?>
                                         <?php foreach ($productos_sin_stock as $producto): ?>
                                             <tr>
-                                                <td><?php echo $producto['nombre']; ?></td>
-                                                <td>0</td>
-                                                <td><span class="badge badge-danger">Sin Stock</span></td>
+                                                <td data-label="Producto"><?php echo $producto['nombre']; ?></td>
+                                                <td data-label="Stock">0</td>
+                                                <td data-label="Estado"><span class="badge badge-danger">Sin Stock</span></td>
                                             </tr>
                                         <?php endforeach; ?>
                                         
                                         <?php foreach ($productos_bajo_stock as $producto): ?>
                                             <tr>
-                                                <td><?php echo $producto['nombre']; ?></td>
-                                                <td><?php echo $producto['stock']; ?></td>
-                                                <td><span class="badge badge-warning">Bajo Stock</span></td>
+                                                <td data-label="Producto"><?php echo $producto['nombre']; ?></td>
+                                                <td data-label="Stock"><?php echo $producto['stock']; ?></td>
+                                                <td data-label="Estado"><span class="badge badge-warning">Bajo Stock</span></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -574,9 +698,9 @@ $nombres_meses = [
                                     <?php else: ?>
                                         <?php foreach ($productos_recientes as $producto): ?>
                                             <tr>
-                                                <td><?php echo $producto['nombre']; ?></td>
+                                                <td data-label="Producto"><?php echo $producto['nombre']; ?></td>
                                                 <?php if ($columna_fecha_existe): ?>
-                                                <td>
+                                                <td data-label="Fecha">
                                                     <?php 
                                                     if (isset($producto['fecha_creacion'])) {
                                                         echo date('d/m/Y', strtotime($producto['fecha_creacion']));
@@ -609,6 +733,12 @@ $nombres_meses = [
                     <p style="color: #666; margin: 0;">Añadir un nuevo producto al catálogo</p>
                 </a>
                 
+                <a href="promociones.php" class="card" style="text-decoration: none; text-align: center; padding: 30px;">
+                    <i class="fas fa-tag" style="font-size: 36px; color: #945a42; margin-bottom: 15px;"></i>
+                    <h3 style="margin-bottom: 10px; color: #333;">Gestionar Promociones</h3>
+                    <p style="color: #666; margin: 0;">Administrar promociones y descuentos</p>
+                </a>
+                
                 <a href="gestionar-margenes.php" class="card" style="text-decoration: none; text-align: center; padding: 30px;">
                     <i class="fas fa-percentage" style="font-size: 36px; color: #945a42; margin-bottom: 15px;"></i>
                     <h3 style="margin-bottom: 10px; color: #333;">Gestionar Márgenes</h3>
@@ -631,6 +761,39 @@ $nombres_meses = [
             </div>
         </div>
     </div>
+    
+    <!-- Botón flotante para móvil -->
+    <a href="agregar-producto.php" class="mobile-fab">
+        <i class="fas fa-plus"></i>
+    </a>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Convertir tablas a formato móvil
+        function makeTablesResponsive() {
+            // Obtener todas las tablas
+            const tables = document.querySelectorAll('.table');
+            
+            tables.forEach(table => {
+                // Obtener textos de encabezados
+                const headerCells = table.querySelectorAll('thead th');
+                const headerTexts = Array.from(headerCells).map(cell => cell.textContent.trim());
+                
+                // Agregar atributos data-label a celdas
+                const bodyCells = table.querySelectorAll('tbody td');
+                bodyCells.forEach((cell, index) => {
+                    const rowIndex = Math.floor(index / headerTexts.length);
+                    const columnIndex = index % headerTexts.length;
+                    if (columnIndex < headerTexts.length) {
+                        cell.setAttribute('data-label', headerTexts[columnIndex]);
+                    }
+                });
+            });
+        }
+        
+        // Ejecutar función
+        makeTablesResponsive();
+    });
+    </script>
 </body>
 </html>
-

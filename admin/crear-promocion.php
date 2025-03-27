@@ -60,7 +60,7 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
   <title>Crear Promoción - Bear Shop</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-      /* Estilos básicos (similares a los anteriores) */
+      /* Estilos básicos */
       body {
           font-family: 'Arial', sans-serif;
           background-color: #f5f5f5;
@@ -119,6 +119,7 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
           border-radius: 8px;
           box-shadow: 0 2px 10px rgba(0,0,0,0.1);
           padding: 30px;
+          margin-bottom: 20px;
       }
       .form-group {
           margin-bottom: 20px;
@@ -154,11 +155,12 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
       }
       .checkbox-group {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           margin-bottom: 20px;
       }
       .checkbox-group input[type="checkbox"] {
           margin-right: 10px;
+          margin-top: 3px;
       }
       .error-message {
           background-color: #ffebee;
@@ -183,6 +185,11 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
           cursor: pointer;
           font-size: 16px;
           font-weight: bold;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
       }
       .submit-btn:hover {
           background-color: #7a4a37;
@@ -191,6 +198,93 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
           font-size: 0.85rem;
           color: #666;
           margin-top: 5px;
+      }
+      
+      /* Estilos responsivos */
+      @media screen and (max-width: 992px) {
+          .container {
+              max-width: 100%;
+          }
+      }
+      
+      @media screen and (max-width: 768px) {
+          .header-content {
+              flex-direction: column;
+              padding: 10px;
+          }
+          
+          .logo {
+              margin-bottom: 10px;
+          }
+          
+          .user-info {
+              width: 100%;
+              justify-content: center;
+              flex-wrap: wrap;
+              gap: 8px;
+          }
+          
+          .btn {
+              padding: 6px 12px;
+              font-size: 14px;
+          }
+          
+          .form-container {
+              padding: 15px;
+          }
+          
+          .form-row {
+              flex-direction: column;
+              gap: 0;
+          }
+          
+          .page-title {
+              font-size: 24px;
+              text-align: center;
+          }
+          
+          .page-header p {
+              text-align: center;
+          }
+          
+          .checkbox-group {
+              align-items: flex-start;
+          }
+          
+          .checkbox-group .help-text {
+              margin-left: 25px;
+          }
+      }
+      
+      /* Botón flotante para móvil */
+      .mobile-fab {
+          display: none;
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background-color: #945a42;
+          color: white;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+          z-index: 1000;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          text-decoration: none;
+          border: none;
+          cursor: pointer;
+      }
+      
+      @media screen and (max-width: 768px) {
+          .mobile-fab {
+              display: flex;
+          }
+          
+          .submit-btn {
+              display: none;
+          }
       }
   </style>
 </head>
@@ -218,18 +312,18 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
       
       <?php if ($error): ?>
           <div class="error-message">
-              <?php echo $error; ?>
+              <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
           </div>
       <?php endif; ?>
       
       <?php if ($exito): ?>
           <div class="success-message">
-              <?php echo $exito; ?>
+              <i class="fas fa-check-circle"></i> <?php echo $exito; ?>
           </div>
       <?php endif; ?>
       
       <div class="form-container">
-          <form method="POST">
+          <form method="POST" id="promocion-form">
               <div class="form-group">
                   <label for="nombre">Nombre de la Promoción *</label>
                   <input type="text" id="nombre" name="nombre" required>
@@ -305,5 +399,58 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
           </form>
       </div>
   </div>
+  
+  <!-- Botón flotante para móvil -->
+  <button type="button" class="mobile-fab" id="mobile-submit">
+      <i class="fas fa-save"></i>
+  </button>
+  
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // Configurar fecha de inicio por defecto (hoy)
+      const fechaInicioInput = document.getElementById('fecha_inicio');
+      const fechaFinInput = document.getElementById('fecha_fin');
+      
+      // Obtener fecha actual en formato YYYY-MM-DD
+      const hoy = new Date();
+      const fechaHoy = hoy.toISOString().split('T')[0];
+      
+      // Calcular fecha de un mes después
+      const unMesDespues = new Date();
+      unMesDespues.setMonth(unMesDespues.getMonth() + 1);
+      const fechaUnMesDespues = unMesDespues.toISOString().split('T')[0];
+      
+      // Establecer valores por defecto
+      if (!fechaInicioInput.value) {
+          fechaInicioInput.value = fechaHoy;
+      }
+      
+      if (!fechaFinInput.value) {
+          fechaFinInput.value = fechaUnMesDespues;
+      }
+      
+      // Evento para el botón flotante en móvil
+      const mobileSubmitBtn = document.getElementById('mobile-submit');
+      const form = document.getElementById('promocion-form');
+      
+      mobileSubmitBtn.addEventListener('click', function() {
+          form.submit();
+      });
+      
+      // Validación de fechas en tiempo real
+      fechaInicioInput.addEventListener('change', validarFechas);
+      fechaFinInput.addEventListener('change', validarFechas);
+      
+      function validarFechas() {
+          const fechaInicio = new Date(fechaInicioInput.value);
+          const fechaFin = new Date(fechaFinInput.value);
+          
+          if (fechaFin < fechaInicio) {
+              alert('La fecha de fin no puede ser anterior a la fecha de inicio.');
+              fechaFinInput.value = fechaInicioInput.value;
+          }
+      }
+  });
+  </script>
 </body>
 </html>

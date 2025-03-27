@@ -78,9 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Modificar la sección de validación en el procesamiento del formulario (cerca de la línea 30)
-    // Agregar esta validación después de obtener los datos del formulario
-
+    // Validaciones
     if (empty($nombre)) {
         $error = 'El nombre del producto es obligatorio.';
     } else if ($precio_costo <= 0) {
@@ -90,33 +88,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Si no hay errores, actualizar en la base de datos
-  if (empty($error)) {
-    $sql = "UPDATE productos SET 
-            nombre = '$nombre', 
-            precio_costo = $precio_costo,
-            multiplicador = $multiplicador,
-            precio = $precio, 
-            
-            imagen = '$imagen', 
-            categoria = '$categoria', 
-            descripcion = '$descripcion', 
-            caracteristicas = '$caracteristicas', 
-            modo_uso = '$modo_uso', 
-            calificacion = $calificacion, 
-            num_calificaciones = $num_calificaciones 
-            WHERE id = $id";
-    
-    if (query($sql)) {
-        $exito = 'Producto actualizado correctamente.';
-        // Actualizar datos del producto
-        $resultado = query("SELECT * FROM productos WHERE id = $id LIMIT 1");
-        $producto = $resultado->fetch_assoc();
-        // Redireccionar después de 2 segundos
-        header('Refresh: 2; URL=productos.php?mensaje=Producto actualizado correctamente');
-    } else {
-        $error = 'Error al actualizar el producto.';
+    if (empty($error)) {
+        $sql = "UPDATE productos SET 
+                nombre = '$nombre', 
+                precio_costo = $precio_costo,
+                multiplicador = $multiplicador,
+                precio = $precio, 
+                imagen = '$imagen', 
+                categoria = '$categoria', 
+                descripcion = '$descripcion', 
+                caracteristicas = '$caracteristicas', 
+                modo_uso = '$modo_uso', 
+                calificacion = $calificacion, 
+                num_calificaciones = $num_calificaciones 
+                WHERE id = $id";
+        
+        if (query($sql)) {
+            $exito = 'Producto actualizado correctamente.';
+            // Actualizar datos del producto
+            $resultado = query("SELECT * FROM productos WHERE id = $id LIMIT 1");
+            $producto = $resultado->fetch_assoc();
+            // Redireccionar después de 2 segundos
+            header('Refresh: 2; URL=productos.php?mensaje=Producto actualizado correctamente');
+        } else {
+            $error = 'Error al actualizar el producto.';
+        }
     }
-}
 }
 
 ?>
@@ -128,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Editar Producto - Bear Shop</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Estilos básicos (similares a agregar-producto.php) */
+        /* Estilos básicos */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f5f5f5;
@@ -187,6 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 30px;
+            margin-bottom: 20px;
         }
         .form-group {
             margin-bottom: 20px;
@@ -200,7 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group select,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group input[type="file"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -242,6 +241,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
         .submit-btn:hover {
             background-color: #7a4a37;
@@ -253,6 +257,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-width: 150px;
             border-radius: 4px;
             border: 1px solid #ddd;
+        }
+        small {
+            display: block;
+            color: #666;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        
+        /* Estilos responsivos */
+        @media screen and (max-width: 992px) {
+            .container {
+                max-width: 100%;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .logo {
+                margin-bottom: 10px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
+            .form-container {
+                padding: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .page-title {
+                font-size: 24px;
+                text-align: center;
+            }
+            
+            .page-header p {
+                text-align: center;
+            }
+            
+            .current-image img {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+        
+        /* Botón flotante para móvil */
+        .mobile-fab {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #945a42;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .mobile-fab {
+                display: flex;
+            }
+            
+            .submit-btn {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -280,44 +374,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <?php if ($error): ?>
             <div class="error-message">
-                <?php echo $error; ?>
+                <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
             </div>
         <?php endif; ?>
         
         <?php if ($exito): ?>
             <div class="success-message">
-                <?php echo $exito; ?>
+                <i class="fas fa-check-circle"></i> <?php echo $exito; ?>
             </div>
         <?php endif; ?>
         
         <div class="form-container">
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" enctype="multipart/form-data" id="producto-form">
                 <div class="form-group">
                     <label for="nombre">Nombre del Producto *</label>
                     <input type="text" id="nombre" name="nombre" value="<?php echo $producto['nombre']; ?>" required>
                 </div>
                 
                 <div class="form-row">
-    <div class="form-group">
-        <label for="precio_costo">Precio de Costo *</label>
-        <input type="number" id="precio_costo" name="precio_costo" step="0.01" min="0.01" value="<?php echo $producto['precio_costo']; ?>" required>
-        <small>Este valor es obligatorio y debe ser mayor que cero.</small>
-    </div>
-    
-    <div class="form-group">
-        <label for="multiplicador">Multiplicador</label>
-        <input type="number" id="multiplicador" name="multiplicador" step="0.01" value="<?php echo $producto['multiplicador']; ?>" min="1.0">
-        <small>Factor por el que se multiplica el costo para obtener el precio de venta</small>
-    </div>
-</div>
-
-<div class="form-group">
-    <label for="precio">Precio de Venta *</label>
-    <input type="number" id="precio" name="precio" step="0.01" value="<?php echo $producto['precio']; ?>" required readonly>
-    <small>Este valor se calcula automáticamente (Costo × Multiplicador)</small>
-</div>
+                    <div class="form-group">
+                        <label for="precio_costo">Precio de Costo *</label>
+                        <input type="number" id="precio_costo" name="precio_costo" step="0.01" min="0.01" value="<?php echo $producto['precio_costo']; ?>" required>
+                        <small>Este valor es obligatorio y debe ser mayor que cero.</small>
+                    </div>
                     
-                  
+                    <div class="form-group">
+                        <label for="multiplicador">Multiplicador</label>
+                        <input type="number" id="multiplicador" name="multiplicador" step="0.01" value="<?php echo $producto['multiplicador']; ?>" min="1.0">
+                        <small>Factor por el que se multiplica el costo para obtener el precio de venta</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="precio">Precio de Venta *</label>
+                    <input type="number" id="precio" name="precio" step="0.01" value="<?php echo $producto['precio']; ?>" required readonly>
+                    <small>Este valor se calcula automáticamente (Costo × Multiplicador)</small>
                 </div>
                 
                 <div class="form-group">
@@ -361,11 +452,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-group">
                         <label for="calificacion">Calificación</label>
                         <input type="number" id="calificacion" name="calificacion" step="0.1" min="0" max="5" value="<?php echo $producto['calificacion']; ?>">
+                        <small>Calificación del producto (0-5)</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="num_calificaciones">Número de Calificaciones</label>
                         <input type="number" id="num_calificaciones" name="num_calificaciones" value="<?php echo $producto['num_calificaciones']; ?>" min="0">
+                        <small>Cantidad de calificaciones recibidas</small>
                     </div>
                 </div>
                 
@@ -375,29 +468,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
+    
+    <!-- Botón flotante para móvil -->
+    <button type="button" class="mobile-fab" id="mobile-submit">
+        <i class="fas fa-save"></i>
+    </button>
 
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const precioCostoInput = document.getElementById('precio_costo');
-    const multiplicadorInput = document.getElementById('multiplicador');
-    const precioInput = document.getElementById('precio');
-    
-    // Función para calcular el precio
-    function calcularPrecio() {
-        const costo = parseFloat(precioCostoInput.value) || 0;
-        const multiplicador = parseFloat(multiplicadorInput.value) || 0;
+    document.addEventListener('DOMContentLoaded', function() {
+        const precioCostoInput = document.getElementById('precio_costo');
+        const multiplicadorInput = document.getElementById('multiplicador');
+        const precioInput = document.getElementById('precio');
+        const mobileSubmitBtn = document.getElementById('mobile-submit');
+        const form = document.getElementById('producto-form');
         
-        if (costo > 0 && multiplicador > 0) {
-            const precio = costo * multiplicador;
-            precioInput.value = precio.toFixed(2);
+        // Función para calcular el precio
+        function calcularPrecio() {
+            const costo = parseFloat(precioCostoInput.value) || 0;
+            const multiplicador = parseFloat(multiplicadorInput.value) || 0;
+            
+            if (costo > 0 && multiplicador > 0) {
+                const precio = costo * multiplicador;
+                precioInput.value = precio.toFixed(2);
+            }
         }
-    }
-    
-    // Eventos para recalcular el precio
-    precioCostoInput.addEventListener('input', calcularPrecio);
-    multiplicadorInput.addEventListener('input', calcularPrecio);
-});
-</script>
+        
+        // Eventos para recalcular el precio
+        precioCostoInput.addEventListener('input', calcularPrecio);
+        multiplicadorInput.addEventListener('input', calcularPrecio);
+        
+        // Evento para el botón flotante en móvil
+        mobileSubmitBtn.addEventListener('click', function() {
+            form.submit();
+        });
+        
+        // Calcular precio inicial
+        calcularPrecio();
+    });
+    </script>
 </body>
 </html>
-

@@ -403,32 +403,122 @@ document.addEventListener("DOMContentLoaded", () => {
     const customerEmail = document.getElementById("customer-email").value
     const paymentMethod = document.querySelector('input[name="payment"]:checked').value
 
-    // Crear mensaje para WhatsApp
-    let message = `*Nuevo Pedido de ${customerName}*\n\n`
-    message += `*Productos:*\n`
+    // Mostrar indicador de carga
+    showNotification("Procesando pedido...")
 
-    cart.forEach((item) => {
-      message += `- ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}\n`
+    // Preparar datos para enviar a la API
+    const orderData = {
+      nombre: customerName,
+      email: customerEmail,
+      metodo_pago: paymentMethod,
+      total: cart.reduce((total, item) => total + item.price * item.quantity, 0),
+      items: cart.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        name: item.name,
+      })),
+    }
+
+    console.log("Enviando datos:", orderData);
+
+    // URL absoluta al archivo PHP en XAMPP
+    const phpUrl = 'http://localhost/bear_shop/guardar-pedido.php';
+    
+    console.log("URL de destino:", phpUrl);
+
+    // Guardar pedido en la base de datos
+    fetch(phpUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(orderData),
     })
+      .then(response => {
+        console.log("Respuesta del servidor:", response.status, response.statusText);
+        
+        // Si la respuesta no es exitosa, lanzar un error
+        if (!response.ok) {
+          throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+        }
+        
+        // Intentar parsear la respuesta como JSON
+        return response.json().catch(err => {
+          console.error("Error al parsear JSON:", err);
+          throw new Error("La respuesta del servidor no es un JSON válido");
+        });
+      })
+      .then(data => {
+        console.log("Datos recibidos:", data);
+        
+        if (data && data.success) {
+          // Crear mensaje para WhatsApp
+          let message = `*Nuevo Pedido de ${customerName}*\n\n`
+          message += `*Productos:*\n`
 
-    const total = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+          cart.forEach((item) => {
+            message += `- ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}\n`
+          })
 
-    message += `\n*Total:* ${formatPrice(total)}`
-    message += `\n*Método de pago:* ${getPaymentMethodName(paymentMethod)}`
-    message += `\n*Email:* ${customerEmail}`
+          const total = cart.reduce((total, item) => total + item.price * item.quantity, 0)
 
-    // Codificar mensaje para URL
-    const encodedMessage = encodeURIComponent(message)
+          message += `\n*Total:* ${formatPrice(total)}`
+          message += `\n*Método de pago:* ${getPaymentMethodName(paymentMethod)}`
+          message += `\n*Email:* ${customerEmail}`
+          
+          // Añadir número de pedido solo si existe
+          if (data.pedido_id) {
+            message += `\n*Número de pedido:* #${data.pedido_id}`
+          }
 
-    // Abrir WhatsApp con el mensaje
-    window.open(`https://wa.me/5491122834351?text=${encodedMessage}`, "_blank")
+          // Codificar mensaje para URL
+          const encodedMessage = encodeURIComponent(message)
 
-    // Cerrar modal y limpiar carrito
-    if (checkoutModal) checkoutModal.style.display = "none"
-    cart = []
-    saveCart()
-    updateCart()
-    showNotification("¡Pedido enviado con éxito!")
+          // Abrir WhatsApp con el mensaje
+          window.open(`https://wa.me/5491122834351?text=${encodedMessage}`, "_blank")
+
+          // Cerrar modal y limpiar carrito
+          if (checkoutModal) checkoutModal.style.display = "none"
+          cart = []
+          saveCart()
+          updateCart()
+          showNotification("¡Pedido enviado con éxito!")
+        } else {
+          showNotification("Error al procesar el pedido: " + (data && data.error ? data.error : "Error desconocido"))
+        }
+      })
+      .catch(error => {
+        console.error("Error completo:", error);
+        
+        // Continuar con WhatsApp aunque falle el guardado en la base de datos
+        let message = `*Nuevo Pedido de ${customerName}*\n\n`
+        message += `*Productos:*\n`
+
+        cart.forEach((item) => {
+          message += `- ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}\n`
+        })
+
+        const total = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+
+        message += `\n*Total:* ${formatPrice(total)}`
+        message += `\n*Método de pago:* ${getPaymentMethodName(paymentMethod)}`
+        message += `\n*Email:* ${customerEmail}`
+
+        // Codificar mensaje para URL
+        const encodedMessage = encodeURIComponent(message)
+
+        // Abrir WhatsApp con el mensaje
+        window.open(`https://wa.me/5491122834351?text=${encodedMessage}`, "_blank")
+
+        // Cerrar modal y limpiar carrito
+        if (checkoutModal) checkoutModal.style.display = "none"
+        cart = []
+        saveCart()
+        updateCart()
+        
+        showNotification("Pedido enviado a WhatsApp, pero hubo un error al guardarlo en la base de datos.")
+      })
   }
 
   // Obtener nombre del método de pago

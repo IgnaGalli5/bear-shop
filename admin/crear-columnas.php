@@ -222,11 +222,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding-bottom: 10px;
         }
         
-        /* Responsive */
-        @media (max-width: 768px) {
+        /* Estilos responsivos */
+        @media screen and (max-width: 992px) {
+            .container {
+                max-width: 100%;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .logo {
+                margin-bottom: 10px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
             .container {
                 padding: 10px;
             }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .page-title {
+                font-size: 24px;
+                text-align: center;
+            }
+            
+            .page-header p {
+                text-align: center;
+            }
+            
+            .card-title {
+                font-size: 20px;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+            }
+        }
+        
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .alert {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Mejoras visuales */
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background-color: #945a42;
+            color: white;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -267,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Paso 1: Añadir Columnas a la Tabla Productos</h3>
+                <h3 class="card-title"><span class="step-number">1</span> Añadir Columnas a la Tabla Productos</h3>
                 <p class="card-description">
                     Este paso añadirá las columnas 'stock' y 'fecha_creacion' a la tabla productos si no existen.
                 </p>
@@ -282,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Paso 2: Crear Tablas para el Sistema de Ventas</h3>
+                <h3 class="card-title"><span class="step-number">2</span> Crear Tablas para el Sistema de Ventas</h3>
                 <p class="card-description">
                     Este paso creará las tablas 'pedidos' y 'pedido_items' necesarias para el sistema de ventas.
                 </p>
@@ -307,6 +383,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </p>
         </div>
     </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Función para mostrar mensajes temporales
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts.length > 0) {
+            setTimeout(function() {
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease-out';
+                });
+            }, 5000); // Desaparecer después de 5 segundos
+        }
+    });
+    </script>
 </body>
 </html>
-

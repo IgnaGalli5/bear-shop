@@ -492,6 +492,7 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
             display: flex;
             border-bottom: 1px solid #ddd;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .tab {
             padding: 10px 20px;
@@ -639,19 +640,208 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
             color: #1565c0;
         }
         
-        /* Responsive */
+        /* Estilos responsivos */
+        @media (max-width: 992px) {
+            .container {
+                padding: 15px;
+            }
+            .card {
+                padding: 20px;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .logo {
+                margin-bottom: 10px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
             .form-row {
                 flex-direction: column;
                 gap: 10px;
+                align-items: flex-start;
             }
-            .form-row label, .form-row .form-control {
-                flex: none;
+            
+            .form-row label, 
+            .form-row .form-control {
                 width: 100%;
             }
+            
             .stats-container {
                 flex-direction: column;
                 gap: 10px;
+            }
+            
+            .tab {
+                flex: 1 0 50%;
+                text-align: center;
+                font-size: 14px;
+                padding: 8px 5px;
+            }
+            
+            .card-title {
+                font-size: 18px;
+            }
+            
+            .page-title {
+                font-size: 22px;
+                text-align: center;
+            }
+            
+            .page-header p {
+                text-align: center;
+            }
+            
+            /* Ajustes para tablas en móvil */
+            .table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .table th, 
+            .table td {
+                padding: 8px 10px;
+            }
+            
+            /* Ajustes para botones en móvil */
+            div[style*="display: flex; gap: 10px"] {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            div[style*="display: flex; gap: 10px"] .btn {
+                width: 100%;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            
+            /* Modal en móvil */
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 15px;
+            }
+        }
+        
+        /* Botón flotante para móvil */
+        .mobile-fab {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #945a42;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-fab {
+                display: flex;
+            }
+            
+            /* Ajustes para el contenido de las pestañas */
+            #tab-global .btn-primary,
+            #tab-categorias .btn-primary,
+            #tab-productos .btn-primary {
+                display: none;
+            }
+            
+            /* Ajustes para el historial en móvil */
+            #tab-historial .table td:nth-child(2) {
+                display: none;
+            }
+            
+            /* Ajustes para las tarjetas de estadísticas */
+            .stat-card {
+                padding: 10px;
+            }
+            
+            .stat-card h3 {
+                font-size: 14px;
+            }
+            
+            .stat-card p {
+                font-size: 18px;
+            }
+        }
+        
+        /* Estilos para el menú de acciones móvil */
+        .mobile-actions {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 998;
+        }
+        
+        .mobile-action-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #eec8a3;
+            color: #945a42;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .mobile-action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .mobile-action-label {
+            position: absolute;
+            right: 60px;
+            background: #945a42;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        
+        .mobile-action-btn:hover .mobile-action-label {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-actions.show {
+                display: flex;
             }
         }
     </style>
@@ -697,6 +887,9 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
                 <p><?php echo $stats['total_productos']; ?></p>
             </div>
             <div class="stat-card">
+                <h3>Con Precio de  ?></p>
+            </div>
+            <div class="stat-card">
                 <h3>Con Precio de Costo</h3>
                 <p><?php echo $stats['con_costo']; ?></p>
             </div>
@@ -727,7 +920,7 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
                     <p class="card-description">Aplica el mismo multiplicador a todas las categorías y productos.</p>
                 </div>
                 
-                <form method="POST">
+                <form method="POST" id="form-global">
                     <div class="form-row">
                         <label for="multiplicador_global">Multiplicador Global:</label>
                         <input type="number" id="multiplicador_global" name="multiplicador_global" class="form-control" step="0.01" min="1.0" value="2.0" required>
@@ -754,7 +947,7 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
                     <p class="card-description">Configura multiplicadores específicos para cada categoría de productos.</p>
                 </div>
                 
-                <form method="POST">
+                <form method="POST" id="form-categorias">
                     <table class="table">
                         <thead>
                             <tr>
@@ -950,7 +1143,7 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
             <span class="close">&times;</span>
             <h3>Editar Precio de Producto</h3>
             
-            <form method="POST">
+            <form method="POST" id="form-editar-precio">
                 <input type="hidden" id="producto_id" name="producto_id">
                 
                 <div class="form-group">
@@ -1022,6 +1215,27 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
                 </div>
             </form>
         </div>
+    </div>
+    
+    <!-- Botón flotante para móvil -->
+    <button type="button" class="mobile-fab" id="mobile-fab">
+        <i class="fas fa-save"></i>
+    </button>
+    
+    <!-- Menú de acciones móvil -->
+    <div class="mobile-actions" id="mobile-actions">
+        <button type="button" class="mobile-action-btn" id="action-global">
+            <i class="fas fa-sync-alt"></i>
+            <span class="mobile-action-label">Aplicar Margen Global</span>
+        </button>
+        <button type="button" class="mobile-action-btn" id="action-categorias">
+            <i class="fas fa-save"></i>
+            <span class="mobile-action-label">Guardar Márgenes</span>
+        </button>
+        <button type="button" class="mobile-action-btn" id="action-recalcular">
+            <i class="fas fa-calculator"></i>
+            <span class="mobile-action-label">Recalcular Precios</span>
+        </button>
     </div>
     
     <script>
@@ -1200,8 +1414,42 @@ $precio_costo = 1000; // Valor fijo para el ejemplo
             
             precioCosto.addEventListener('input', actualizarPreviewModal);
             nuevoPrecio.addEventListener('input', actualizarPreviewModal);
+            
+            // Funcionalidad para botones móviles
+            const mobileFab = document.getElementById('mobile-fab');
+            const mobileActions = document.getElementById('mobile-actions');
+            const actionGlobal = document.getElementById('action-global');
+            const actionCategorias = document.getElementById('action-categorias');
+            const actionRecalcular = document.getElementById('action-recalcular');
+            
+            mobileFab.addEventListener('click', function() {
+                mobileActions.classList.toggle('show');
+            });
+            
+            actionGlobal.addEventListener('click', function() {
+                document.getElementById('form-global').submit();
+            });
+            
+            actionCategorias.addEventListener('click', function() {
+                const form = document.getElementById('form-categorias');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'actualizar_margenes';
+                input.value = '1';
+                form.appendChild(input);
+                form.submit();
+            });
+            
+            actionRecalcular.addEventListener('click', function() {
+                const form = document.getElementById('form-categorias');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'recalcular_precios';
+                input.value = '1';
+                form.appendChild(input);
+                form.submit();
+            });
         });
     </script>
 </body>
 </html>
-
