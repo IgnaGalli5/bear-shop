@@ -25,6 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $destacada = isset($_POST['destacada']) ? 1 : 0;
   $margen_minimo = !empty($_POST['margen_minimo']) ? (float)$_POST['margen_minimo'] : 1.30;
   
+  // Obtener tipo de aplicación
+  $aplicacion = isset($_POST['aplicacion']) ? $_POST['aplicacion'] : 'seleccion';
+  
   // Validar fechas
   if (strtotime($fecha_fin) < strtotime($fecha_inicio)) {
     $error = 'La fecha de fin no puede ser anterior a la fecha de inicio.';
@@ -32,19 +35,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   
   // Si no hay errores, insertar en la base de datos
   if (empty($error)) {
-    $sql = "INSERT INTO promociones (nombre, tipo, valor, fecha_inicio, fecha_fin, activa, categoria, descripcion, destacada, margen_minimo) 
-            VALUES ('$nombre', '$tipo', $valor, '$fecha_inicio', '$fecha_fin', $activa, " . 
-            ($categoria === NULL ? "NULL" : "'$categoria'") . ", " . 
-            ($descripcion === NULL ? "NULL" : "'$descripcion'") . ", $destacada, $margen_minimo)";
+    // Iniciar transacción para asegurar consistencia
+    $conexion = conectarDB();
+    mysqli_begin_transaction($conexion);
     
-    if (query($sql)) {
-      $promocion_id = mysqli_insert_id(conectarDB());
-      $exito = 'Promoción creada correctamente.';
+    try {
+      $sql = "INSERT INTO promociones (nombre, tipo, valor, fecha_inicio, fecha_fin, activa, categoria, descripcion, destacada, margen_minimo) 
+              VALUES ('$nombre', '$tipo', $valor, '$fecha_inicio', '$fecha_fin', $activa, " . 
+              ($categoria === NULL ? "NULL" : "'$categoria'") . ", " . 
+              ($descripcion === NULL ? "NULL" : "'$descripcion'") . ", $destacada, $margen_minimo)";
+      
+      if (!mysqli_query($conexion, $sql)) {
+        throw new Exception("Error al crear la promoción: " . mysqli_error($conexion));
+      }
+      
+      $promocion_id = mysqli_insert_id($conexion);
+      
+      // Aplicar promoción a productos según la selección
+      if ($aplicacion === 'todos') {
+        // Aplicar a todos los productos
+        $productos_sql = "UPDATE productos SET promocion_id = $promocion_id";
+        if ($tipo === 'porcentaje') {
+          $productos_sql .= ", precio_promocion = CASE WHEN precio * (1 - $valor/100) > 0 THEN precio * (1 - $valor/100) ELSE 0 END";
+        } else if ($tipo === 'monto_fijo') {
+          $productos_sql .= ", precio_promocion = CASE WHEN precio - $valor > 0 THEN precio - $valor ELSE 0 END";
+        }
+        
+        // Ejecutar la consulta y verificar si fue exitosa
+        if (!mysqli_query($conexion, $productos_sql)) {
+          throw new Exception("Error al aplicar la promoción a los productos: " . mysqli_error($conexion));
+        }
+        
+        // Contar cuántos productos se actualizaron
+        $count_result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM productos WHERE promocion_id = $promocion_id");
+        $count_data = mysqli_fetch_assoc($count_result);
+        $productos_actualizados = $count_data['total'];
+        
+        // Agregar mensaje con la cantidad de productos actualizados
+        $exito .= " Se aplicó la promoción a $productos_actualizados productos.";
+        
+      } else if ($aplicacion === 'categoria' && !empty($_POST['categoria_aplicar'])) {
+        // Aplicar a productos de una categoría
+        $cat_aplicar = escapar($_POST['categoria_aplicar']);
+        
+        // Verificar primero si hay productos en esta categoría
+        $check_productos = mysqli_query($conexion, "SELECT COUNT(*) as total FROM productos WHERE categoria = '$cat_aplicar'");
+        $check_data = mysqli_fetch_assoc($check_productos);
+        $total_productos_categoria = $check_data['total'];
+        
+        if ($total_productos_categoria == 0) {
+          throw new Exception("No se encontraron productos en la categoría '$cat_aplicar'.");
+        }
+        
+        $productos_sql = "UPDATE productos SET promocion_id = $promocion_id";
+        if ($tipo === 'porcentaje') {
+          $productos_sql .= ", precio_promocion = CASE WHEN precio * (1 - $valor/100) > 0 THEN precio * (1 - $valor/100) ELSE 0 END";
+        } else if ($tipo === 'monto_fijo') {
+          $productos_sql .= ", precio_promocion = CASE WHEN precio - $valor > 0 THEN precio - $valor ELSE 0 END";
+        }
+        $productos_sql .= " WHERE categoria = '$cat_aplicar'";
+        
+        // Ejecutar la consulta y verificar si fue exitosa
+        if (!mysqli_query($conexion, $productos_sql)) {
+          throw new Exception("Error al aplicar la promoción a los productos de la categoría: " . mysqli_error($conexion));
+        }
+        
+        // Contar cuántos productos se actualizaron
+        $count_result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM productos WHERE promocion_id = $promocion_id AND categoria = '$cat_aplicar'");
+        $count_data = mysqli_fetch_assoc($count_result);
+        $productos_actualizados = $count_data['total'];
+        
+        // Agregar mensaje con la cantidad de productos actualizados
+        $exito .= " Se aplicó la promoción a $productos_actualizados productos de la categoría '$cat_aplicar'.";
+        
+      } else if ($aplicacion === 'seleccion' && isset($_POST['productos']) && is_array($_POST['productos'])) {
+        // Aplicar a productos seleccionados
+        $productos_actualizados = 0;
+        
+        foreach ($_POST['productos'] as $producto_id) {
+          $producto_id = (int)$producto_id;
+          
+          // Obtener precio del producto
+          $producto_result = mysqli_query($conexion, "SELECT precio FROM productos WHERE id = $producto_id");
+          if ($producto_result && mysqli_num_rows($producto_result) > 0) {
+            $producto = mysqli_fetch_assoc($producto_result);
+            $precio = $producto['precio'];
+            
+            // Calcular precio promocional
+            $precio_promocion = $precio;
+            if ($tipo === 'porcentaje') {
+              $precio_promocion = $precio * (1 - $valor/100);
+            } else if ($tipo === 'monto_fijo') {
+              $precio_promocion = $precio - $valor;
+              if ($precio_promocion < 0) $precio_promocion = 0;
+            }
+            
+            // Actualizar producto
+            $update_sql = "UPDATE productos SET promocion_id = $promocion_id, precio_promocion = $precio_promocion WHERE id = $producto_id";
+            if (!mysqli_query($conexion, $update_sql)) {
+              throw new Exception("Error al actualizar el producto ID $producto_id: " . mysqli_error($conexion));
+            }
+            
+            $productos_actualizados++;
+          }
+        }
+        
+        // Agregar mensaje con la cantidad de productos actualizados
+        $exito .= " Se aplicó la promoción a $productos_actualizados productos seleccionados.";
+      }
+      
+      // Si todo salió bien, confirmar la transacción
+      mysqli_commit($conexion);
+      
+      $exito = 'Promoción creada correctamente.' . $exito;
       
       // Redireccionar después de 2 segundos
       header('Refresh: 2; URL=promociones.php?mensaje=Promoción creada correctamente');
-    } else {
-      $error = 'Error al crear la promoción.';
+      
+    } catch (Exception $e) {
+      // Si hubo algún error, revertir la transacción
+      mysqli_rollback($conexion);
+      $error = $e->getMessage();
     }
   }
 }
@@ -382,6 +493,58 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
                   <p class="help-text">Factor mínimo sobre el costo para aplicar la promoción (por defecto 1.30 = 30% sobre el costo).</p>
               </div>
               
+              <div class="form-group">
+                  <label for="aplicacion">Aplicar promoción a:</label>
+                  <select id="aplicacion" name="aplicacion" onchange="mostrarOpcionesProductos()">
+                      <option value="seleccion">Productos seleccionados</option>
+                      <option value="categoria">Todos los productos de una categoría</option>
+                      <option value="todos">Todos los productos</option>
+                  </select>
+              </div>
+
+              <div id="opcion-categoria" style="display: none;" class="form-group">
+                  <label for="categoria_aplicar">Seleccionar categoría:</label>
+                  <select id="categoria_aplicar" name="categoria_aplicar">
+                      <option value="">Seleccionar categoría</option>
+                      <?php foreach ($categorias as $cat): ?>
+                          <option value="<?php echo $cat['categoria']; ?>"><?php echo ucfirst($cat['categoria']); ?></option>
+                      <?php endforeach; ?>
+                  </select>
+              </div>
+
+              <div id="opcion-productos" class="form-group">
+                  <label>Seleccionar productos:</label>
+                  <div class="productos-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                      <div class="search-box" style="margin-bottom: 10px;">
+                          <input type="text" id="buscar-productos" placeholder="Buscar productos..." style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                      </div>
+                      <table class="productos-table" style="width: 100%;">
+                          <thead>
+                              <tr>
+                                  <th style="width: 50px;"><input type="checkbox" id="seleccionar-todos"></th>
+                                  <th>Producto</th>
+                                  <th>Precio</th>
+                                  <th>Categoría</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <?php 
+                              // Obtener todos los productos
+                              $productos = obtenerResultados("SELECT id, nombre, precio, categoria FROM productos ORDER BY nombre");
+                              foreach ($productos as $producto): 
+                              ?>
+                              <tr class="producto-item">
+                                  <td><input type="checkbox" name="productos[]" value="<?php echo $producto['id']; ?>" class="producto-checkbox"></td>
+                                  <td><?php echo $producto['nombre']; ?></td>
+                                  <td>$<?php echo number_format($producto['precio'], 2, ',', '.'); ?></td>
+                                  <td><?php echo ucfirst($producto['categoria']); ?></td>
+                              </tr>
+                              <?php endforeach; ?>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+              
               <div class="checkbox-group">
                   <input type="checkbox" id="activa" name="activa" checked>
                   <label for="activa">Promoción activa</label>
@@ -406,51 +569,103 @@ $categorias = obtenerResultados("SELECT DISTINCT categoria FROM productos WHERE 
   </button>
   
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
-      // Configurar fecha de inicio por defecto (hoy)
-      const fechaInicioInput = document.getElementById('fecha_inicio');
-      const fechaFinInput = document.getElementById('fecha_fin');
-      
-      // Obtener fecha actual en formato YYYY-MM-DD
-      const hoy = new Date();
-      const fechaHoy = hoy.toISOString().split('T')[0];
-      
-      // Calcular fecha de un mes después
-      const unMesDespues = new Date();
-      unMesDespues.setMonth(unMesDespues.getMonth() + 1);
-      const fechaUnMesDespues = unMesDespues.toISOString().split('T')[0];
-      
-      // Establecer valores por defecto
-      if (!fechaInicioInput.value) {
-          fechaInicioInput.value = fechaHoy;
-      }
-      
-      if (!fechaFinInput.value) {
-          fechaFinInput.value = fechaUnMesDespues;
-      }
-      
-      // Evento para el botón flotante en móvil
-      const mobileSubmitBtn = document.getElementById('mobile-submit');
-      const form = document.getElementById('promocion-form');
-      
-      mobileSubmitBtn.addEventListener('click', function() {
-          form.submit();
-      });
-      
-      // Validación de fechas en tiempo real
-      fechaInicioInput.addEventListener('change', validarFechas);
-      fechaFinInput.addEventListener('change', validarFechas);
-      
-      function validarFechas() {
-          const fechaInicio = new Date(fechaInicioInput.value);
-          const fechaFin = new Date(fechaFinInput.value);
-          
-          if (fechaFin < fechaInicio) {
-              alert('La fecha de fin no puede ser anterior a la fecha de inicio.');
-              fechaFinInput.value = fechaInicioInput.value;
-          }
-      }
-  });
-  </script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar fecha de inicio por defecto (hoy)
+    const fechaInicioInput = document.getElementById('fecha_inicio');
+    const fechaFinInput = document.getElementById('fecha_fin');
+    
+    // Obtener fecha actual en formato YYYY-MM-DD
+    const hoy = new Date();
+    const fechaHoy = hoy.toISOString().split('T')[0];
+    
+    // Calcular fecha de un mes después
+    const unMesDespues = new Date();
+    unMesDespues.setMonth(unMesDespues.getMonth() + 1);
+    const fechaUnMesDespues = unMesDespues.toISOString().split('T')[0];
+    
+    // Establecer valores por defecto
+    if (!fechaInicioInput.value) {
+        fechaInicioInput.value = fechaHoy;
+    }
+    
+    if (!fechaFinInput.value) {
+        fechaFinInput.value = fechaUnMesDespues;
+    }
+    
+    // Evento para el botón flotante en móvil
+    const mobileSubmitBtn = document.getElementById('mobile-submit');
+    const form = document.getElementById('promocion-form');
+    
+    if (mobileSubmitBtn) {
+        mobileSubmitBtn.addEventListener('click', function() {
+            form.submit();
+        });
+    }
+    
+    // Validación de fechas en tiempo real
+    fechaInicioInput.addEventListener('change', validarFechas);
+    fechaFinInput.addEventListener('change', validarFechas);
+    
+    function validarFechas() {
+        const fechaInicio = new Date(fechaInicioInput.value);
+        const fechaFin = new Date(fechaFinInput.value);
+        
+        if (fechaFin < fechaInicio) {
+            alert('La fecha de fin no puede ser anterior a la fecha de inicio.');
+            fechaFinInput.value = fechaInicioInput.value;
+        }
+    }
+    
+    // Funcionalidad para buscar productos
+    const buscarInput = document.getElementById('buscar-productos');
+    if (buscarInput) {
+        buscarInput.addEventListener('input', function() {
+            const texto = this.value.toLowerCase();
+            const filas = document.querySelectorAll('.producto-item');
+            
+            filas.forEach(function(fila) {
+                const contenido = fila.textContent.toLowerCase();
+                if (contenido.includes(texto)) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Seleccionar todos los productos
+    const seleccionarTodos = document.getElementById('seleccionar-todos');
+    if (seleccionarTodos) {
+        seleccionarTodos.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.producto-checkbox');
+            checkboxes.forEach(function(checkbox) {
+                if (checkbox.closest('tr').style.display !== 'none') {
+                    checkbox.checked = seleccionarTodos.checked;
+                }
+            });
+        });
+    }
+});
+
+// Función para mostrar opciones según el tipo de aplicación
+function mostrarOpcionesProductos() {
+    const aplicacion = document.getElementById('aplicacion').value;
+    const opcionCategoria = document.getElementById('opcion-categoria');
+    const opcionProductos = document.getElementById('opcion-productos');
+    
+    if (aplicacion === 'categoria') {
+        opcionCategoria.style.display = 'block';
+        opcionProductos.style.display = 'none';
+    } else if (aplicacion === 'todos') {
+        opcionCategoria.style.display = 'none';
+        opcionProductos.style.display = 'none';
+    } else {
+        opcionCategoria.style.display = 'none';
+        opcionProductos.style.display = 'block';
+    }
+}
+</script>
 </body>
 </html>
+

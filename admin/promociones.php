@@ -33,8 +33,20 @@ if (isset($_GET['toggle'])) {
   exit;
 }
 
-// Obtener todas las promociones
-$promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creacion DESC");
+// Buscar la sección donde se muestra la tabla de promociones
+// Modificar la consulta para obtener el conteo de productos por promoción
+
+// Reemplazar la línea:
+// $promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creacion DESC");
+
+// Con esta consulta mejorada:
+$promociones = obtenerResultados("
+  SELECT p.*, 
+         (SELECT COUNT(*) FROM productos WHERE promocion_id = p.id) as total_productos 
+  FROM promociones p 
+  ORDER BY p.fecha_creacion DESC
+");
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -513,8 +525,12 @@ $promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creac
             <?php foreach ($promociones as $promocion): ?>
               <?php 
                 // Contar productos en esta promoción
-                $count_result = query("SELECT COUNT(*) as total FROM productos WHERE promocion_id = {$promocion['id']}");
-                $productos_count = $count_result->fetch_assoc()['total'];
+                // Reemplazar:
+                // $count_result = query("SELECT COUNT(*) as total FROM productos WHERE promocion_id = {$promocion['id']}");
+                // $productos_count = $count_result->fetch_assoc()['total'];
+
+                // Con:
+                $productos_count = $promocion['total_productos'];
                 
                 // Determinar si la promoción está activa y vigente
                 $hoy = date('Y-m-d');
@@ -569,9 +585,13 @@ $promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creac
                 <td><span class="badge <?php echo $clase_estado; ?>"><?php echo $estado; ?></span></td>
                 <td>
                   <?php echo $productos_count; ?> productos
-                  <a href="ver-productos-promocion.php?id=<?php echo $promocion['id']; ?>" class="btn btn-sm">
-                    <i class="fas fa-eye"></i> Ver
-                  </a>
+                  <?php if ($productos_count > 0): ?>
+                    <a href="ver-productos-promocion.php?id=<?php echo $promocion['id']; ?>" class="btn btn-sm">
+                      <i class="fas fa-eye"></i> Ver
+                    </a>
+                  <?php else: ?>
+                    <span class="badge badge-warning">Sin productos</span>
+                  <?php endif; ?>
                 </td>
                 <td class="actions">
                   <a href="editar-promocion.php?id=<?php echo $promocion['id']; ?>" class="btn btn-sm">
@@ -611,8 +631,12 @@ $promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creac
         <?php foreach ($promociones as $promocion): ?>
           <?php 
             // Contar productos en esta promoción
-            $count_result = query("SELECT COUNT(*) as total FROM productos WHERE promocion_id = {$promocion['id']}");
-            $productos_count = $count_result->fetch_assoc()['total'];
+            // Reemplazar:
+            // $count_result = query("SELECT COUNT(*) as total FROM productos WHERE promocion_id = {$promocion['id']}");
+            // $productos_count = $count_result->fetch_assoc()['total'];
+
+            // Con:
+            $productos_count = $promocion['total_productos'];
             
             // Determinar si la promoción está activa y vigente
             $hoy = date('Y-m-d');
@@ -678,7 +702,12 @@ $promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creac
               
               <div class="promo-card-item">
                 <div class="promo-card-label">Productos</div>
-                <div class="promo-card-value"><?php echo $productos_count; ?> productos</div>
+                <div class="promo-card-value">
+                  <?php echo $productos_count; ?> productos
+                  <?php if ($productos_count == 0): ?>
+                    <span class="badge badge-warning" style="margin-left: 5px;">Sin productos</span>
+                  <?php endif; ?>
+                </div>
               </div>
               
               <div class="promo-card-item">
@@ -727,3 +756,4 @@ $promociones = obtenerResultados("SELECT * FROM promociones ORDER BY fecha_creac
   </a>
 </body>
 </html>
+

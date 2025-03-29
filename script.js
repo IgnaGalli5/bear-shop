@@ -1,3 +1,283 @@
+// Declarar las variables productGrid, filteredProducts, visibleProducts y loadMoreBtn
+const productGrid = document.getElementById("product-grid") // Asume que tienes un elemento con el id "product-grid"
+const filteredProducts = [] // Inicializar con un array vacío
+const visibleProducts = 8 // Valor inicial, puedes ajustarlo
+const loadMoreBtn = document.getElementById("load-more-btn") // Asume que tienes un botón con el id "load-more-btn"
+
+// Declarar las variables products, addToCart y showNotification
+const products = []
+function addToCart(productId) {
+  // Implementación de la función addToCart
+  console.log("Adding product to cart with ID:", productId)
+  // Aquí iría la lógica para agregar el producto al carrito
+}
+function showNotification(message) {
+  // Implementación de la función showNotification
+  console.log("Showing notification:", message)
+  // Aquí iría la lógica para mostrar la notificación
+}
+
+// Actualizar el total del carrito
+function updateCartTotal() {
+  const cartItems = document.querySelectorAll(".cart-item")
+  let subtotal = 0
+
+  cartItems.forEach((item) => {
+    const price = Number.parseFloat(item.querySelector(".item-price").getAttribute("data-price"))
+    const quantity = Number.parseInt(item.querySelector(".item-quantity").textContent)
+    subtotal += price * quantity
+  })
+
+  // Actualizar subtotal
+  document.getElementById("cart-subtotal").textContent = "$" + formatPrice(subtotal)
+
+  // Verificar método de pago seleccionado
+  const paymentEfectivo = document.getElementById("payment-efectivo")
+  let total = subtotal
+
+  // Aplicar descuento si el pago es en efectivo
+  if (paymentEfectivo && paymentEfectivo.checked) {
+    // Obtener el porcentaje de descuento en efectivo (si está disponible)
+    const descuentoEfectivo = window.cashDiscountPercent || 10 // Usar 10% como valor predeterminado
+    total = subtotal * (1 - descuentoEfectivo / 100)
+  }
+
+  // Actualizar total
+  document.getElementById("cart-total").textContent = "$" + formatPrice(total)
+
+  // Mostrar u ocultar elementos del carrito según corresponda
+  if (cartItems.length > 0) {
+    document.getElementById("empty-cart").style.display = "none"
+    document.getElementById("cart-summary").style.display = "block"
+  } else {
+    document.getElementById("empty-cart").style.display = "block"
+    document.getElementById("cart-summary").style.display = "none"
+  }
+}
+
+// Formatear precio para mostrar
+function formatPrice(price) {
+  return price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+}
+
+// Agregar event listeners a los métodos de pago
+document.addEventListener("DOMContentLoaded", () => {
+  const paymentMethods = document.querySelectorAll('input[name="payment"]')
+  paymentMethods.forEach((method) => {
+    method.addEventListener("change", updateCartTotal)
+  })
+})
+
+// Añadir estilo para la etiqueta de descuento si no existe
+if (!document.querySelector("style#discount-label-style")) {
+  const discountStyle = document.createElement("style")
+  discountStyle.id = "discount-label-style"
+  discountStyle.textContent = `
+    .discount-label {
+      color: #e74c3c;
+      font-weight: bold;
+      font-size: 0.85em;
+      display: block;
+      margin-top: 5px;
+    }
+  `
+  document.head.appendChild(discountStyle)
+}
+
+// Declarar openProductModal (asumiendo que está definida en otro archivo o contexto)
+// Si 'openProductModal' es una función que necesitas importar, hazlo aquí.
+// Por ejemplo: import { openProductModal } from './modal.js';
+// Si es una función global, asegúrate de que esté definida antes de este script.
+function openProductModal(productId) {
+  // Implementación de la función openProductModal
+  console.log("Opening modal for product ID:", productId)
+  // Aquí iría la lógica para abrir el modal con la información del producto
+}
+
+// Actualizar la función renderProducts para usar el descuento en efectivo dinámico
+function renderProducts() {
+  if (!productGrid) return
+
+  productGrid.innerHTML = ""
+
+  const productsToShow = filteredProducts.slice(0, visibleProducts)
+
+  productsToShow.forEach((product) => {
+    const productCard = document.createElement("div")
+    productCard.className = "product-card"
+    if (product.onSale) {
+      productCard.classList.add("on-sale")
+    }
+    productCard.setAttribute("data-id", product.id)
+    productCard.setAttribute("data-category", product.category)
+
+    // Crear HTML para el precio (normal o promocional)
+    let priceHTML = ""
+
+    if (product.onSale && product.originalPrice) {
+      // Producto con promoción normal
+      const promoLabel = product.nombre_promocion ? product.nombre_promocion : "¡OFERTA!"
+      priceHTML = `
+        <p class="price">
+          <span class="original-price">${formatPrice(product.originalPrice)}</span>
+          <span class="sale-price">${formatPrice(product.price)}</span>
+        </p>
+        <p class="discount-label">${promoLabel}</p>
+      `
+    } else {
+      // Producto sin promoción - mostrar solo precio normal
+      priceHTML = `
+        <p class="price">${formatPrice(product.price)}</p>
+      `
+    }
+
+    productCard.innerHTML = `
+                <div class="product-image">
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="product-overlay">
+                        <a href="#" class="btn-small">Ver detalles</a>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3>${product.name}</h3>
+                    ${priceHTML}
+                    <button class="add-to-cart" data-id="${product.id}">Agregar al carrito</button>
+                </div>
+            `
+    productGrid.appendChild(productCard)
+  })
+
+  // Mostrar u ocultar el botón "Ver más" según la cantidad de productos
+  if (loadMoreBtn) {
+    if (filteredProducts.length <= visibleProducts) {
+      loadMoreBtn.style.display = "none"
+    } else {
+      loadMoreBtn.style.display = "inline-block"
+    }
+  }
+
+  // Agregar eventos a los botones de "Agregar al carrito"
+  document.querySelectorAll(".add-to-cart").forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
+      const productId = Number.parseInt(this.getAttribute("data-id"))
+      addToCart(productId)
+    })
+  })
+
+  // Agregar evento para abrir el modal al hacer clic en la tarjeta de producto
+  document.querySelectorAll(".product-card").forEach((card) => {
+    card.addEventListener("click", function () {
+      const productId = Number.parseInt(this.getAttribute("data-id"))
+      openProductModal(productId)
+    })
+  })
+}
+
+// Modificar la función cargarProductos para manejar el descuento en efectivo
+async function cargarProductos() {
+  try {
+    // Añadir un parámetro de tiempo para evitar el caché
+    const timestamp = new Date().getTime()
+    const response = await fetch(`api/productos.php?t=${timestamp}`)
+    if (!response.ok) {
+      throw new Error("Error al cargar los productos")
+    }
+
+    const productos = await response.json()
+
+    // Guardar el porcentaje de descuento en efectivo globalmente
+    if (productos.length > 0 && productos[0].cashDiscountPercent) {
+      window.cashDiscountPercent = productos[0].cashDiscountPercent
+
+      // Actualizar el texto del radio button de efectivo
+      const efectivoLabel = document.querySelector('label[for="payment-efectivo"] span')
+      if (efectivoLabel) {
+        efectivoLabel.textContent = `Efectivo (${window.cashDiscountPercent}% de descuento)`
+      }
+    }
+
+    // Procesar y mostrar los productos
+    mostrarProductos(productos)
+  } catch (error) {
+    console.error("Error:", error)
+    // Mostrar mensaje de error al usuario
+  }
+}
+
+// Mostrar productos en la página
+function mostrarProductos(productos) {
+  const productGrid = document.getElementById("product-grid")
+  if (!productGrid) return
+
+  // Limpiar el contenedor
+  productGrid.innerHTML = ""
+
+  productos.forEach((producto) => {
+    const productCard = document.createElement("div")
+    productCard.className = "product-card"
+    productCard.setAttribute("data-id", producto.id)
+    productCard.setAttribute("data-category", producto.category)
+
+    // Crear HTML para el precio (normal o promocional)
+    let priceHTML = ""
+
+    if (producto.onSale && producto.originalPrice) {
+      // Producto con promoción normal
+      const promoLabel = producto.nombre_promocion ? producto.nombre_promocion : "¡OFERTA!"
+      priceHTML = `
+        <p class="price">
+          <span class="original-price">$${formatPrice(producto.originalPrice)}</span> 
+          $${formatPrice(producto.price)}
+        </p>
+        <p class="discount-label">${promoLabel}</p>
+      `
+    } else {
+      // Producto sin promoción - mostrar solo precio normal
+      priceHTML = `
+        <p class="price">$${formatPrice(producto.price)}</p>
+      `
+    }
+
+    productCard.innerHTML = `
+      <div class="product-image">
+        <img src="${producto.image}" alt="${producto.name}">
+        ${producto.onSale ? '<span class="discount-badge">Oferta</span>' : ""}
+      </div>
+      <div class="product-info">
+        <h3>${producto.name}</h3>
+        <div class="product-price">
+          ${priceHTML}
+        </div>
+        <div class="product-actions">
+          <button class="btn-small view-product" data-id="${producto.id}">Ver detalles</button>
+          <button class="btn-small add-to-cart" data-id="${producto.id}">Agregar</button>
+        </div>
+      </div>
+    `
+
+    productGrid.appendChild(productCard)
+  })
+
+  // Agregar eventos a los botones
+  document.querySelectorAll(".view-product").forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.preventDefault()
+      const productId = this.getAttribute("data-id")
+      abrirModalProducto(productId)
+    })
+  })
+
+  document.querySelectorAll(".add-to-cart").forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.preventDefault()
+      const productId = this.getAttribute("data-id")
+      agregarAlCarrito(productId)
+    })
+  })
+}
+
+// Inicializar cuando se carga la página
 document.addEventListener("DOMContentLoaded", () => {
   // Variables globales
   let cart = [] // Carrito de compras
@@ -5,7 +285,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let products = [] // Productos cargados desde la API
   let filteredProducts = [] // Productos filtrados por búsqueda
   let currentProductId = null // ID del producto actualmente mostrado en el modal
-  let currentSlide = 0 // Índice de la diapositiva actual en el slider de novedades
+  const currentSlide = 0 // Índice de la diapositiva actual en el slider de novedades
+  // Variable global para el porcentaje de descuento en efectivo
+  window.cashDiscountPercent = 10 // Valor por defecto, se actualizará desde la API
 
   // Elementos DOM - Referencias a elementos HTML para manipularlos con JavaScript
   const productGrid = document.getElementById("product-grid")
@@ -50,7 +332,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalAddToCart = document.getElementById("modal-add-to-cart")
 
   // Funciones
-  
+
+  // Declarar abrirModalProducto y agregarAlCarrito
+  function abrirModalProducto(productId) {
+    // Implementación de la función abrirModalProducto
+    console.log("Opening modal for product ID:", productId)
+    // Aquí iría la lógica para abrir el modal con la información del producto
+  }
+
+  function agregarAlCarrito(productId) {
+    // Implementación de la función agregarAlCarrito
+    console.log("Adding product to cart with ID:", productId)
+    // Aquí iría la lógica para agregar el producto al carrito
+  }
 
   // Formatear precio: convierte un número a formato de moneda
   function formatPrice(price) {
@@ -59,12 +353,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Renderizar productos: muestra los productos en la grilla areglado recien
   function renderProducts() {
-    if (!productGrid) return;
-  
+    if (!productGrid) return
+
     productGrid.innerHTML = ""
-  
+
     const productsToShow = filteredProducts.slice(0, visibleProducts)
-  
+
     productsToShow.forEach((product) => {
       const productCard = document.createElement("div")
       productCard.className = "product-card"
@@ -72,32 +366,39 @@ document.addEventListener("DOMContentLoaded", () => {
         productCard.classList.add("on-sale")
       }
       productCard.setAttribute("data-id", product.id)
-      
+      productCard.setAttribute("data-category", product.category)
+
       // Crear HTML para el precio (normal o promocional)
-      let priceHTML = `<p class="price">${formatPrice(product.price)}</p>`;
+      let priceHTML = ""
+
       if (product.onSale && product.originalPrice) {
+        // Producto con promoción normal
+        const promoLabel = product.nombre_promocion ? product.nombre_promocion : "¡OFERTA!"
         priceHTML = `
           <p class="price">
             <span class="original-price">${formatPrice(product.originalPrice)}</span>
             <span class="sale-price">${formatPrice(product.price)}</span>
           </p>
-          <p class="sale-badge">¡OFERTA!</p>
-        `;
+          <p class="discount-label">${promoLabel}</p>
+        `
+      } else {
+        // Producto sin promoción - mostrar solo precio normal
+        priceHTML = `
+          <p class="price">${formatPrice(product.price)}</p>
+        `
       }
-      
+
       productCard.innerHTML = `
-                  <div class="product-image">
-                      <img src="${product.image}" alt="${product.name}">
-                      <div class="product-overlay">
-                          <a href="#" class="btn-small">Ver detalles</a>
-                      </div>
-                  </div>
-                  <div class="product-info">
-                      <h3>${product.name}</h3>
-                      ${priceHTML}
-                      <button class="add-to-cart" data-id="${product.id}">Agregar al carrito</button>
-                  </div>
-              `
+        <div class="product-image">
+          <img src="${product.image}" alt="${product.name}">
+          ${product.onSale ? '<span class="discount-badge">Oferta</span>' : ""}
+        </div>
+        <div class="product-info">
+          <h3>${product.name}</h3>
+          ${priceHTML}
+          <button class="add-to-cart" data-id="${product.id}">Agregar al carrito</button>
+        </div>
+      `
       productGrid.appendChild(productCard)
     })
 
@@ -127,21 +428,35 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
-  
 
   // Abrir modal de producto: muestra los detalles de un producto
   function openProductModal(productId) {
-    if (!productModal) return;
-    
+    if (!productModal) return
+
     const product = products.find((p) => p.id === productId)
-  
+
     if (!product) return
-  
+
     currentProductId = productId
-  
+
     // Actualizar contenido del modal
     if (modalProductName) modalProductName.textContent = product.name
-    if (modalProductPrice) modalProductPrice.textContent = formatPrice(product.price)
+
+    // Actualizar precio en el modal (normal o con descuento en efectivo)
+    if (modalProductPrice) {
+      if (product.onSale && product.originalPrice) {
+        const promoLabel = product.nombre_promocion ? product.nombre_promocion : "¡OFERTA!"
+        modalProductPrice.innerHTML = `
+          <span class="original-price">${formatPrice(product.originalPrice)}</span> 
+          ${formatPrice(product.price)}
+          <div class="discount-label">${promoLabel}</div>
+        `
+      } else {
+        // Mostrar solo el precio normal sin descuento en efectivo
+        modalProductPrice.innerHTML = `${formatPrice(product.price)}`
+      }
+    }
+
     if (modalProductDescription) modalProductDescription.textContent = product.description
     if (modalProductUsage) modalProductUsage.textContent = product.usage
     if (modalRatingCount) modalRatingCount.textContent = `(${product.ratingCount} reseñas)`
@@ -181,7 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Mostrar modal
     productModal.style.display = "block"
-    
+
     // Mostrar botón flotante en móviles si la pantalla es pequeña
     if (window.innerWidth <= 768 && mobileCloseBtn) {
       mobileCloseBtn.style.display = "flex"
@@ -196,8 +511,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Buscar productos: filtra los productos según el término de búsqueda
   function searchProducts() {
-    if (!searchInput) return;
-    
+    if (!searchInput) return
+
     const query = searchInput.value.trim().toLowerCase()
 
     if (query === "") {
@@ -268,8 +583,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cartSummary) cartSummary.style.display = "block"
 
     // Renderizar items del carrito
-    if (!cartItemsContainer) return;
-    
+    if (!cartItemsContainer) return
+
     cartItemsContainer.innerHTML = ""
 
     cart.forEach((item) => {
@@ -281,7 +596,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   </div>
                   <div class="cart-item-details">
                       <h3>${item.name}</h3>
-                      <p class="cart-item-price">${formatPrice(item.price)}</p>
+                      <p class="cart-item-price" data-price="${item.price}">${formatPrice(item.price)}</p>
                   </div>
                   <div class="cart-item-actions">
                       <div class="quantity-control">
@@ -298,7 +613,25 @@ document.addEventListener("DOMContentLoaded", () => {
     // Calcular subtotal y total
     const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0)
     if (cartSubtotal) cartSubtotal.textContent = formatPrice(subtotal)
-    if (cartTotal) cartTotal.textContent = formatPrice(subtotal)
+
+    // Verificar método de pago seleccionado
+    const paymentEfectivo = document.getElementById("payment-efectivo")
+    let total = subtotal
+
+    // Aplicar descuento si el pago es en efectivo
+    if (paymentEfectivo && paymentEfectivo.checked) {
+      // Obtener el porcentaje de descuento en efectivo (si está disponible)
+      const descuentoEfectivo = window.cashDiscountPercent || 10 // Usar 10% como valor predeterminado
+      total = subtotal * (1 - descuentoEfectivo / 100)
+
+      // Mostrar el total con descuento
+      if (cartTotal)
+        cartTotal.innerHTML =
+          formatPrice(total) + ` <small class="discount-label">(${descuentoEfectivo}% descuento aplicado)</small>`
+    } else {
+      // Mostrar el total sin descuento
+      if (cartTotal) cartTotal.textContent = formatPrice(subtotal)
+    }
 
     // Agregar eventos a los botones de cantidad
     document.querySelectorAll(".quantity-btn.decrease").forEach((button) => {
@@ -420,12 +753,12 @@ document.addEventListener("DOMContentLoaded", () => {
       })),
     }
 
-    console.log("Enviando datos:", orderData);
+    console.log("Enviando datos:", orderData)
 
     // URL absoluta al archivo PHP en XAMPP
-    const phpUrl = 'http://localhost/bear_shop/guardar-pedido.php';
-    
-    console.log("URL de destino:", phpUrl);
+    const phpUrl = "http://localhost/bear_shop/guardar-pedido.php"
+
+    console.log("URL de destino:", phpUrl)
 
     // Guardar pedido en la base de datos
     fetch(phpUrl, {
@@ -435,23 +768,23 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       body: JSON.stringify(orderData),
     })
-      .then(response => {
-        console.log("Respuesta del servidor:", response.status, response.statusText);
-        
+      .then((response) => {
+        console.log("Respuesta del servidor:", response.status, response.statusText)
+
         // Si la respuesta no es exitosa, lanzar un error
         if (!response.ok) {
-          throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+          throw new Error(`Error del servidor: ${response.status} ${response.statusText}`)
         }
-        
+
         // Intentar parsear la respuesta como JSON
-        return response.json().catch(err => {
-          console.error("Error al parsear JSON:", err);
-          throw new Error("La respuesta del servidor no es un JSON válido");
-        });
+        return response.json().catch((err) => {
+          console.error("Error al parsear JSON:", err)
+          throw new Error("La respuesta del servidor no es un JSON válido")
+        })
       })
-      .then(data => {
-        console.log("Datos recibidos:", data);
-        
+      .then((data) => {
+        console.log("Datos recibidos:", data)
+
         if (data && data.success) {
           // Crear mensaje para WhatsApp
           let message = `*Nuevo Pedido de ${customerName}*\n\n`
@@ -461,12 +794,21 @@ document.addEventListener("DOMContentLoaded", () => {
             message += `- ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}\n`
           })
 
-          const total = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+          const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+          let total = subtotal
+
+          // Aplicar descuento si el pago es en efectivo
+          if (paymentMethod === "efectivo") {
+            const descuentoEfectivo = window.cashDiscountPercent || 10
+            total = subtotal * (1 - descuentoEfectivo / 100)
+            message += `\n*Subtotal:* ${formatPrice(subtotal)}`
+            message += `\n*Descuento (${descuentoEfectivo}%):* -${formatPrice(subtotal - total)}`
+          }
 
           message += `\n*Total:* ${formatPrice(total)}`
           message += `\n*Método de pago:* ${getPaymentMethodName(paymentMethod)}`
           message += `\n*Email:* ${customerEmail}`
-          
+
           // Añadir número de pedido solo si existe
           if (data.pedido_id) {
             message += `\n*Número de pedido:* #${data.pedido_id}`
@@ -488,9 +830,9 @@ document.addEventListener("DOMContentLoaded", () => {
           showNotification("Error al procesar el pedido: " + (data && data.error ? data.error : "Error desconocido"))
         }
       })
-      .catch(error => {
-        console.error("Error completo:", error);
-        
+      .catch((error) => {
+        console.error("Error completo:", error)
+
         // Continuar con WhatsApp aunque falle el guardado en la base de datos
         let message = `*Nuevo Pedido de ${customerName}*\n\n`
         message += `*Productos:*\n`
@@ -499,7 +841,16 @@ document.addEventListener("DOMContentLoaded", () => {
           message += `- ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}\n`
         })
 
-        const total = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+        const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+        let total = subtotal
+
+        // Aplicar descuento si el pago es en efectivo
+        if (paymentMethod === "efectivo") {
+          const descuentoEfectivo = window.cashDiscountPercent || 10
+          total = subtotal * (1 - descuentoEfectivo / 100)
+          message += `\n*Subtotal:* ${formatPrice(subtotal)}`
+          message += `\n*Descuento (${descuentoEfectivo}%):* -${formatPrice(subtotal - total)}`
+        }
 
         message += `\n*Total:* ${formatPrice(total)}`
         message += `\n*Método de pago:* ${getPaymentMethodName(paymentMethod)}`
@@ -516,7 +867,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cart = []
         saveCart()
         updateCart()
-        
+
         showNotification("Pedido enviado a WhatsApp, pero hubo un error al guardarlo en la base de datos.")
       })
   }
@@ -537,53 +888,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Función para controlar el slider de novedades
   function showSlide(index) {
-    if (!slides || slides.length === 0) return;
-    
+    const slides = document.querySelectorAll("#news-slider .slide")
+    const indicators = document.querySelectorAll("#slider-indicators .indicator")
+
+    if (!slides || slides.length === 0) return
+
     // Ocultar todas las diapositivas
     slides.forEach((slide) => {
       slide.classList.remove("active")
     })
 
     // Desactivar todos los indicadores
-    if (indicatorDots) {
-      indicatorDots.forEach((dot) => {
-        dot.classList.remove("active")
-      })
-    }
+    indicators.forEach((dot) => {
+      dot.classList.remove("active")
+    })
 
     // Mostrar la diapositiva actual
     slides[index].classList.add("active")
 
     // Activar el indicador correspondiente
-    if (indicatorDots && indicatorDots[index]) {
-      indicatorDots[index].classList.add("active")
+    if (indicators[index]) {
+      indicators[index].classList.add("active")
     }
-
-    // Actualizar el índice actual
-    currentSlide = index
   }
 
   // Función para avanzar al siguiente slide
   function nextSlide() {
-    if (!slides || slides.length === 0) return;
-    
-    let next = currentSlide + 1
-    if (next >= slides.length) {
-      next = 0
+    const slides = document.querySelectorAll("#news-slider .slide")
+    if (!slides || slides.length === 0) return
+
+    // Encontrar el slide activo actual
+    let currentIndex = 0
+    slides.forEach((slide, index) => {
+      if (slide.classList.contains("active")) {
+        currentIndex = index
+      }
+    })
+
+    // Calcular el siguiente índice
+    let nextIndex = currentIndex + 1
+    if (nextIndex >= slides.length) {
+      nextIndex = 0
     }
-    showSlide(next)
+
+    showSlide(nextIndex)
   }
 
-  // Iniciar el slider automático
-  function startSlider() {
-    if (slides && slides.length > 0) {
-      // Mostrar el primer slide
-      showSlide(0)
+  // Asegurarse de que los indicadores sean clickeables
+  document.addEventListener("DOMContentLoaded", () => {
+    // Configurar los indicadores para que sean clicables
+    const indicators = document.querySelectorAll("#slider-indicators .indicator")
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener("click", () => {
+        showSlide(index)
+      })
+    })
 
-      // Configurar el intervalo para cambiar automáticamente
-      setInterval(nextSlide, 3000)
-    }
-  }
+    // Iniciar el slider automático
+    setInterval(nextSlide, 5000) // Cambiar cada 5 segundos
+  })
 
   // Crear botón flotante para cerrar en móviles
   function createMobileCloseButton() {
@@ -615,27 +978,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (mobileCloseBtn) mobileCloseBtn.style.display = "none"
   }
 
-// Cargar productos desde la API
-async function cargarProductos() {
-  try {
-    // Añadir un parámetro de tiempo para evitar el caché
-    const timestamp = new Date().getTime();
-    const response = await fetch(`http://localhost/bear_shop/api/productos.php?t=${timestamp}`);
-    if (!response.ok) {
-      throw new Error('Error al cargar los productos');
+  // Cargar productos desde la API
+  async function cargarProductos() {
+    try {
+      // Añadir un parámetro de tiempo para evitar el caché
+      const timestamp = new Date().getTime()
+      const response = await fetch(`api/productos.php?t=${timestamp}`)
+      if (!response.ok) {
+        throw new Error("Error al cargar los productos")
+      }
+
+      products = await response.json()
+
+      // Guardar el porcentaje de descuento en efectivo globalmente
+      if (products.length > 0 && products[0].cashDiscountPercent) {
+        window.cashDiscountPercent = products[0].cashDiscountPercent
+
+        // Actualizar el texto del radio button de efectivo
+        const efectivoLabel = document.querySelector('label[for="payment-efectivo"] span')
+        if (efectivoLabel) {
+          efectivoLabel.textContent = `Efectivo (${window.cashDiscountPercent}% de descuento)`
+        }
+      }
+
+      filteredProducts = [...products]
+
+      // Renderizar productos una vez cargados
+      renderProducts()
+    } catch (error) {
+      console.error("Error:", error)
+      showNotification("No se pudieron cargar los productos. Intenta de nuevo más tarde.")
     }
-    
-    products = await response.json();
-    filteredProducts = [...products];
-    
-    // Renderizar productos una vez cargados
-    renderProducts();
-    
-  } catch (error) {
-    console.error('Error:', error);
-    showNotification('No se pudieron cargar los productos. Intenta de nuevo más tarde.');
   }
-}
 
   // Agregar función para guardar el carrito en localStorage
   function saveCart() {
@@ -666,7 +1040,12 @@ async function cargarProductos() {
 
   // Cerrar menú al hacer clic fuera
   document.addEventListener("click", (event) => {
-    if (menu && !event.target.closest(".menu") && !event.target.closest("#menuToggle") && menu.classList.contains("active")) {
+    if (
+      menu &&
+      !event.target.closest(".menu") &&
+      !event.target.closest("#menuToggle") &&
+      menu.classList.contains("active")
+    ) {
       menu.classList.remove("active")
     }
   })
@@ -734,7 +1113,7 @@ async function cargarProductos() {
   // Control de cantidad en el modal de producto
   if (modalQuantityDecrease) {
     modalQuantityDecrease.addEventListener("click", () => {
-      if (!modalQuantity) return;
+      if (!modalQuantity) return
       const quantity = Number.parseInt(modalQuantity.value)
       if (quantity > 1) {
         modalQuantity.value = quantity - 1
@@ -744,100 +1123,38 @@ async function cargarProductos() {
 
   if (modalQuantityIncrease) {
     modalQuantityIncrease.addEventListener("click", () => {
-      if (!modalQuantity) return;
+      if (!modalQuantity) return
       const quantity = Number.parseInt(modalQuantity.value)
       modalQuantity.value = quantity + 1
     })
   }
 
-  if (modalQuantity) {
-    modalQuantity.addEventListener("change", function () {
-      const quantity = Number.parseInt(this.value)
-      if (quantity < 1) {
-        this.value = 1
-      }
-    })
-  }
-
-  // Agregar al carrito desde el modal
   if (modalAddToCart) {
     modalAddToCart.addEventListener("click", () => {
-      if (currentProductId && modalQuantity) {
-        const quantity = Number.parseInt(modalQuantity.value)
-        addToCart(currentProductId, quantity)
-        if (productModal) productModal.style.display = "none"
-        if (mobileCloseBtn) mobileCloseBtn.style.display = "none"
-      }
+      if (!currentProductId || !modalQuantity) return
+      const quantity = Number.parseInt(modalQuantity.value)
+      addToCart(currentProductId, quantity)
+      closeModal()
     })
   }
 
-  // Agregar evento para las tarjetas de categoría
-  document.querySelectorAll(".category-card").forEach((card) => {
-    card.addEventListener("click", function () {
-      const category = this.getAttribute("data-category")
-      if (searchInput) searchInput.value = category
-      searchProducts()
-
-      // Scroll a la sección de productos
-      const productosSection = document.querySelector("#productos")
-      if (productosSection) productosSection.scrollIntoView({ behavior: "smooth" })
-    })
+  // Métodos de pago
+  const paymentMethods = document.querySelectorAll('input[name="payment"]')
+  paymentMethods.forEach((method) => {
+    method.addEventListener("change", updateCart)
   })
 
-  // Eventos para el slider de novedades
-  if (indicators) {
-    // Agregar eventos a los indicadores para cambiar manualmente
-    indicatorDots.forEach((dot, index) => {
-      dot.addEventListener("click", () => {
-        showSlide(index)
-      })
-    })
+  // Cargar carrito desde localStorage
+  loadCart()
+
+  // Cargar productos al iniciar la página
+  cargarProductos()
+
+  // Iniciar slider de novedades
+  function startSlider() {
+    setInterval(nextSlide, 5000)
   }
 
-  // Agregar delegación de eventos para los botones de cantidad en el carrito
-  if (cartItemsContainer) {
-    cartItemsContainer.addEventListener("click", (e) => {
-      // Verificar si se hizo clic en un botón de incremento o decremento
-      if (e.target.classList.contains("quantity-btn") || e.target.closest(".quantity-btn")) {
-        e.preventDefault()
-        e.stopPropagation()
-
-        const button = e.target.classList.contains("quantity-btn") ? e.target : e.target.closest(".quantity-btn")
-        const productId = Number.parseInt(button.getAttribute("data-id"))
-
-        if (button.classList.contains("increase")) {
-          updateItemQuantity(productId, "increase")
-        } else if (button.classList.contains("decrease")) {
-          updateItemQuantity(productId, "decrease")
-        }
-      }
-
-      // Verificar si se hizo clic en el botón de eliminar
-      if (e.target.classList.contains("remove-item") || e.target.closest(".remove-item")) {
-        e.preventDefault()
-        e.stopPropagation()
-
-        const button = e.target.classList.contains("remove-item") ? e.target : e.target.closest(".remove-item")
-        const productId = Number.parseInt(button.getAttribute("data-id"))
-        removeFromCart(productId)
-      }
-    })
-  }
-
-  // Ajustar cuando cambia el tamaño de la ventana
-  window.addEventListener("resize", () => {
-    if (productModal && productModal.style.display === "block") {
-      if (window.innerWidth <= 768 && mobileCloseBtn) {
-        mobileCloseBtn.style.display = "flex"
-      } else if (mobileCloseBtn) {
-        mobileCloseBtn.style.display = "none"
-      }
-    }
-  })
-  
-
-  // Inicializar
-  cargarProductos() // Cargar productos desde la API
-  loadCart() // Cargar carrito desde localStorage
-  startSlider() // Iniciar el slider de novedades
+  startSlider()
 })
+
