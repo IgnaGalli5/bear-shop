@@ -1,0 +1,79 @@
+/* Estilos para el submenú - Versión simplificada para todos los dispositivos */
+.has-submenu {
+    position: relative;
+  }
+  
+  /* Mostrar el toggle en todos los dispositivos */
+  .submenu-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 10px 15px;
+    cursor: pointer;
+    display: block; /* Visible en todos los dispositivos */
+  }
+  
+  /* Estilo base para el submenú */
+  .submenu {
+    display: none; /* Oculto por defecto */
+    list-style: none;
+    padding: 10px 15px;
+    margin-top: 5px;
+    background-color: rgba(238, 200, 163, 0.1);
+    border-radius: 4px;
+  }
+  
+  /* Cuando está activo, mostrar el submenú */
+  .submenu.active {
+    display: block !important; /* Forzar visualización */
+  }
+  
+  .submenu li {
+    margin: 8px 0;
+  }
+  
+  .submenu li a {
+    font-size: 0.9em;
+    color: var(--color-dark);
+    display: block; /* Hacer que toda el área sea clickeable */
+    padding: 5px 0;
+  }
+  
+  .submenu li a:hover {
+    color: var(--color-black);
+    font-weight: bold;
+  }
+  
+  /* Rotar el icono cuando está activo */
+  .submenu-toggle.active i {
+    transform: rotate(180deg);
+  }
+  
+  /* Ajustes específicos para móvil */
+  @media (max-width: 768px) {
+    .has-submenu > a {
+      width: calc(100% - 50px); /* Dejar espacio para el toggle */
+    }
+  }
+  
+  /* Ajustes específicos para escritorio */
+  @media (min-width: 769px) {
+    .submenu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: var(--color-white);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      min-width: 180px;
+      z-index: 1000;
+    }
+  
+    /* Ajustar posición del toggle en escritorio */
+    .submenu-toggle {
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+  
+  

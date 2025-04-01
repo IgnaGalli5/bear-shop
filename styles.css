@@ -197,7 +197,7 @@ header .container {
   color: var(--color-black);
 }
 
-/* Sección de novedades/slider */
+/* Sección de novedades/slider - ACTUALIZADA para la estructura original */
 .news-slider {
   padding: 20px 0;
   background-color: var(--color-white);
@@ -209,16 +209,16 @@ header .container {
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  /* Eliminar restricciones de altura fija */
-  height: auto;
 }
 
 .slider {
   position: relative;
   width: 100%;
-  /* Eliminar altura fija */
-  padding-bottom: 56.25%; /* Proporción 16:9 para mantener consistencia */
+  /* Aumentar la altura para escritorio */
+  height: 0;
+  padding-bottom: 40%; /* Aumentado para mostrar más contenido vertical */
 }
 
 .slide {
@@ -229,7 +229,9 @@ header .container {
   height: 100%;
   opacity: 0;
   transition: opacity 1s ease;
-  background-color: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .slide.active {
@@ -237,18 +239,10 @@ header .container {
   z-index: 1;
 }
 
-.slide-content {
-  width: 100%;
-  height: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .slide img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Asegura que la imagen completa sea visible */
+  object-fit: contain; /* Cambiado a contain para asegurar que se vea la imagen completa */
   display: block;
 }
 
@@ -276,15 +270,41 @@ header .container {
   transform: scale(1.2);
 }
 
-/* Ajustes adicionales para pantallas grandes */
-@media (min-width: 992px) {
-  .slider-container {
-    max-width: 90%;
+/* Ajustes específicos para pantallas grandes */
+@media (min-width: 1200px) {
+  .slider {
+    padding-bottom: 35%; /* Proporción ajustada para pantallas grandes */
+  }
+
+  .slide img {
+    object-fit: contain; /* Asegurar que se vea la imagen completa */
+    max-height: 100%;
   }
 }
 
+/* Ajustes para diferentes tamaños de pantalla */
+@media (max-width: 992px) {
+  .slider {
+    padding-bottom: 35%; /* Más altura para tablets */
+  }
+}
 
+@media (max-width: 768px) {
+  .slider {
+    padding-bottom: 45%; /* Más altura para móviles */
+  }
+}
 
+@media (max-width: 576px) {
+  .slider {
+    padding-bottom: 60%; /* Aún más altura para móviles pequeños */
+  }
+
+  .indicator {
+    width: 8px;
+    height: 8px;
+  }
+}
 
 /* Hero Section */
 .hero {
@@ -377,6 +397,34 @@ header .container {
   margin-bottom: 40px;
 }
 
+.product-image {
+  position: relative;
+  overflow: hidden;
+  height: 300px;
+  cursor: pointer;
+}
+
+.product-image::after {
+  content: "Ver detalles";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(148, 90, 66, 0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-image:hover::after {
+  opacity: 1;
+}
+
 .product-card {
   background-color: var(--color-white);
   border-radius: 8px;
@@ -389,12 +437,6 @@ header .container {
 .product-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-}
-
-.product-image {
-  position: relative;
-  overflow: hidden;
-  height: 300px;
 }
 
 .product-image img {
@@ -664,7 +706,6 @@ header .container {
   margin: 25px 0;
 }
 
-
 .payment-methods h4 {
   margin-bottom: 15px;
   color: var(--color-dark);
@@ -788,6 +829,74 @@ header .container {
   font-weight: bold;
   margin-bottom: 15px;
   color: var(--color-dark);
+}
+
+/* Estilos responsivos para el modal */
+@media (max-width: 992px) {
+  .product-detail-content {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-image {
+    height: 350px;
+  }
+
+  .product-detail-info {
+    padding: 25px;
+    max-height: none; /* Eliminar altura máxima en tablets/móviles */
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+
+  .product-detail-modal {
+    padding: 0;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .product-detail-content {
+    height: 100%;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  .product-detail-image {
+    height: 300px;
+    min-height: 300px; /* Asegurar altura mínima */
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .product-detail-image {
+    height: 250px;
+    min-height: 250px;
+  }
+
+  .product-detail-info {
+    padding: 20px;
+  }
+
+  .modal-product-price {
+    font-size: 1.2rem;
+  }
+
+  .product-detail-info h2 {
+    font-size: 1.5rem;
+    padding-right: 40px; /* Espacio para el botón de cierre */
+  }
 }
 
 .product-rating {
@@ -1040,8 +1149,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -webkit-appearance: none;
--moz-appearance: textfield;
-appearance: none;
+  -moz-appearance: textfield;
+  appearance: none;
 }
 
 /* Responsive Styles */
@@ -1079,11 +1188,6 @@ appearance: none;
   #product-search {
     width: 120px;
     margin: 0;
-  }
-
-  /* Ajustar slider de novedades */
-  .slider {
-    height: 250px;
   }
 }
 
@@ -1186,11 +1290,6 @@ appearance: none;
     font-size: 1.5rem;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     z-index: 1200;
-  }
-
-  /* Ajustar slider de novedades */
-  .slider {
-    height: 200px;
   }
 
   /* Ajustar imágenes de pago y envío */
@@ -1304,11 +1403,6 @@ appearance: none;
     margin-bottom: 3px;
   }
 
-  /* Ajustar slider de novedades */
-  .slider {
-    height: 120px;
-  }
-
   /* Ajustar indicadores del slider */
   .indicator {
     width: 8px;
@@ -1397,5 +1491,187 @@ appearance: none;
 #checkout-form .btn {
   width: 100%;
   margin-top: 10px;
+}
+
+/* Estilos para el carrusel de imágenes de producto */
+.product-image-carousel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.carousel-main {
+  position: relative;
+  width: 100%;
+  height: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.carousel-main img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.carousel-prev,
+.carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: var(--transition);
+}
+
+.carousel-prev {
+  left: 10px;
+}
+
+.carousel-next {
+  right: 10px;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background-color: var(--color-dark);
+  color: var(--color-white);
+}
+
+.carousel-thumbnails {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 5px 0;
+  justify-content: center;
+  max-height: 20%;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.thumbnail.active {
+  border-color: var(--color-dark);
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Estilos responsivos para el carrusel */
+@media (max-width: 768px) {
+  .carousel-thumbnails {
+    gap: 5px;
+  }
+
+  .thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+
+  .carousel-prev,
+  .carousel-next {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-thumbnails {
+    gap: 3px;
+  }
+
+  .thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Añadir estos estilos para el hover en las imágenes de productos */
+
+/* Ocultar el botón "Ver detalles" ya que ahora se hace clic en la imagen */
+.btn-small.view-product {
+  display: none;
+}
+
+/* Ajustar el botón de agregar para que ocupe todo el ancho */
+.product-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-small.add-to-cart {
+  width: 100%;
+}
+
+/* Modificar la sección de productos en móvil */
+@media (max-width: 576px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .product-card {
+    margin-bottom: 15px;
+  }
+
+  .product-image {
+    height: auto;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .product-info {
+    padding: 10px;
+  }
+
+  .product-info h3 {
+    font-size: 0.9rem;
+    height: 2.8em;
+    margin-bottom: 5px;
+  }
+
+  .price {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+
+  .product-actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .btn-small {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
+  .discount-label {
+    font-size: 0.7em;
+  }
+
+  .original-price {
+    font-size: 0.8em;
+  }
 }
 

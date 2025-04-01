@@ -47,6 +47,8 @@ function formatearPrecioFront($precio) {
     <title>Bear.Shop - Tienda Online</title>
     <!-- Enlaces a hojas de estilo -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="submenu.css">
+    <link rel="stylesheet" href="product-carousel.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/bogart" rel="stylesheet">
     <link rel="shortcut icon" href="img/icon.png" />
@@ -71,7 +73,15 @@ function formatearPrecioFront($precio) {
             <nav>
                 <ul class="menu">
                     <li><a href="#inicio">Inicio</a></li>
-                    <li><a href="#productos">Productos</a></li>
+                    <li class="has-submenu">
+                        <a href="#productos">Productos</a>
+                        <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
+                        <ul class="submenu">
+                            <li><a href="#productos" data-category="maquillaje">Maquillaje</a></li>
+                            <li><a href="#productos" data-category="skincare">Skincare</a></li>
+                            <li><a href="#productos" data-category="accesorios">Accesorios</a></li>
+                        </ul>
+                    </li>
                     <li><a href="#carrito">Carrito</a></li>
                 </ul>
             </nav>
@@ -91,11 +101,38 @@ function formatearPrecioFront($precio) {
         </div>
     </header>
 
-    <!-- Sección de novedades/promociones con imágenes rotativas -->
+    <!-- Modificar la sección del slider para mejorar la estructura -->
+   
+
+    <!-- Sección hero con imagen principal y buscador -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+               <img src="img/logo-png.png" alt="bear-shop" class="logo">
+               
+               <!-- Buscador de productos -->
+               <div class="search-container">
+                   <input type="text" id="product-search" placeholder="Buscar productos...">
+                   <button id="search-btn"><i class="fas fa-search"></i></button>
+               </div>
+               
+                <a href="#productos" class="btn">Ver productos</a>
+            </div>
+        </div>
+    </section>
+
     <section class="news-slider">
         <div class="container">
             <div class="slider-container">
                 <div class="slider" id="news-slider">
+                    <?php 
+                    // Simulación de datos de promociones (reemplazar con datos reales)
+                    $promociones = [
+                        ['nombre' => 'Promo 1', 'imagen' => 'promos/descuentos.jpeg'],
+                        ['nombre' => 'Promo 2', 'imagen' => 'promos/envios.jpeg'],
+                        ['nombre' => 'Promo 3', 'imagen' => 'promos/regalos.jpeg'],
+                    ];
+                    ?>
                     <?php if (count($promociones) > 0): ?>
                         <?php foreach ($promociones as $index => $promo): ?>
                             <div class="slide <?php echo $index === 0 ? 'active' : ''; ?>">
@@ -141,23 +178,6 @@ function formatearPrecioFront($precio) {
                         <span class="indicator <?php echo $i === 0 ? 'active' : ''; ?>" data-index="<?php echo $i; ?>"></span>
                     <?php endfor; ?>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Sección hero con imagen principal y buscador -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-               <img src="img/logo-png.png" alt="bear-shop" class="logo">
-               
-               <!-- Buscador de productos -->
-               <div class="search-container">
-                   <input type="text" id="product-search" placeholder="Buscar productos...">
-                   <button id="search-btn"><i class="fas fa-search"></i></button>
-               </div>
-               
-                <a href="#productos" class="btn">Ver productos</a>
             </div>
         </div>
     </section>
@@ -286,10 +306,7 @@ function formatearPrecioFront($precio) {
                         <span>Subtotal:</span>
                         <span id="cart-subtotal">$0.00</span>
                     </div>
-                    <div class="summary-item">
-                        <span>Envío:</span>
-                        <span>Gratis</span>
-                    </div>
+                  
                     <div class="summary-item total">
                         <span>Total:</span>
                         <span id="cart-total">$0.00</span>
@@ -348,6 +365,10 @@ function formatearPrecioFront($precio) {
                 <div class="form-group">
                     <label for="customer-cp">Codigo Postal</label>
                     <input type="cp" id="customer-cp" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-name">Aclaraciones</label>
+                    <input type="cp" id="customer-name" required placeholder="Ingrese detalle del producto, por ejemplo , la tonalidad o color">
                 </div>
                 <button type="submit" class="btn">Enviar pedido</button>
             </form>
@@ -428,7 +449,10 @@ function formatearPrecioFront($precio) {
                 <h3>Enlaces rápidos</h3>
                 <ul>
                     <li><a href="#inicio">Inicio</a></li>
-                    <li><a href="#productos">Productos</a></li>
+                    <li><a href="#productos">Todos los productos</a></li>
+                    <li><a href="#productos" data-category="maquillaje">Maquillaje</a></li>
+                    <li><a href="#productos" data-category="skincare">Skincare</a></li>
+                    <li><a href="#productos" data-category="accesorios">Accesorios</a></li>
                     <li><a href="#carrito">Carrito</a></li>
                 </ul>
             </div>
@@ -445,7 +469,8 @@ function formatearPrecioFront($precio) {
         </div>
         <!-- Copyright -->
         <div class="footer-bottom">
-            <p>&copy; <?php echo date('Y'); ?> BEAR. Todos los derechos reservados.</p>
+            <p>&copy; <?php echo date('Y'); ?> BEAR. Todos los derechos reservados. Contacto info@bearshop.com.ar
+            </p>
             <!-- <p>Creado por <a href="https://ignacode.com" target="_blank" style="color: #945a42; text-decoration: none; font-weight: bold;">Igna.Code</a></p>-->
              <p>Creado por Igna.Code</p>
         </div>
@@ -455,6 +480,7 @@ function formatearPrecioFront($precio) {
 
     <!-- Script principal -->
     <script src="script.js"></script>
+    <script src="script-submenu.js"></script>
     <script>
         // Pasar datos de productos a JavaScript
         const initialProducts = <?php echo json_encode($productos_destacados); ?>;

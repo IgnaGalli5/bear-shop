@@ -25,6 +25,25 @@ if ($resultado->num_rows === 0) {
 
 $producto = $resultado->fetch_assoc();
 
+// Inicializar array de imágenes
+$imagenes = [];
+if (!empty($producto['imagen'])) {
+    $imagenes[] = $producto['imagen']; // Añadir imagen principal
+}
+
+// Añadir imágenes adicionales si existen
+if (!empty($producto['imagenes'])) {
+    $imagenes_json = $producto['imagenes'];
+    $imagenes_array = json_decode($imagenes_json, true);
+    if (is_array($imagenes_array) && !empty($imagenes_array)) {
+        foreach ($imagenes_array as $img) {
+            if (!in_array($img, $imagenes)) { // Evitar duplicados
+                $imagenes[] = $img;
+            }
+        }
+    }
+}
+
 $error = '';
 $exito = '';
 
@@ -35,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $precio_costo = (float)$_POST['precio_costo'];
     $multiplicador = (float)$_POST['multiplicador'];
     $precio = $precio_costo * $multiplicador;
-  
     $categoria = escapar($_POST['categoria']);
     $descripcion = escapar($_POST['descripcion']);
     $caracteristicas = escapar($_POST['caracteristicas']);
@@ -43,10 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $calificacion = (float)$_POST['calificacion'];
     $num_calificaciones = (int)$_POST['num_calificaciones'];
     
-    // Mantener la imagen actual por defecto
-    $imagen = $producto['imagen'];
+    // Mantener las imágenes actuales
+    $imagenes_actuales = isset($_POST['imagenes_actuales']) ? $_POST['imagenes_actuales'] : [];
     
-    // Manejar la imagen si se sube una nueva
+    // Mantener la imagen principal actual por defecto
+    $imagen_principal = $producto['imagen'];
+    
+    // Manejar la imagen principal si se sube una nueva
     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
         $archivo = $_FILES['imagen'];
         $nombre_archivo = $archivo['name'];
@@ -71,9 +92,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Mover archivo
             if (move_uploaded_file($temp_archivo, $ruta_destino)) {
-                $imagen = 'productos/' . $nombre_unico;
+                $imagen_principal = 'productos/' . $nombre_unico;
             } else {
-                $error = 'Error al subir la imagen.';
+                $error = 'Error al subir la imagen principal.';
+            }
+        }
+    }
+    
+    // Preparar array de imágenes final
+    $imagenes_finales = [];
+    
+    // Agregar imagen principal
+    $imagenes_finales[] = $imagen_principal;
+    
+    // Agregar imágenes actuales que se mantienen
+    if (!empty($imagenes_actuales)) {
+        foreach ($imagenes_actuales as $img) {
+            if ($img !== $imagen_principal && file_exists('../' . $img)) {
+                $imagenes_finales[] = $img;
+            }
+        }
+    }
+    
+    // Manejar imágenes adicionales nuevas
+    if (isset($_FILES['imagenes_adicionales']) && !empty($_FILES['imagenes_adicionales']['name'][0])) {
+        $total_imagenes = count($_FILES['imagenes_adicionales']['name']);
+        
+        for ($i = 0; $i < $total_imagenes; $i++) {
+            if ($_FILES['imagenes_adicionales']['error'][$i] === 0) {
+                $nombre_archivo = $_FILES['imagenes_adicionales']['name'][$i];
+                $tipo_archivo = $_FILES['imagenes_adicionales']['type'][$i];
+                $temp_archivo = $_FILES['imagenes_adicionales']['tmp_name'][$i];
+                
+                // Verificar tipo de archivo
+                $extensiones_permitidas = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!in_array($tipo_archivo, $extensiones_permitidas)) {
+                    $error = 'Tipo de archivo no permitido en imagen adicional. Solo se permiten JPG y PNG.';
+                    break;
+                } else {
+                    // Crear directorio si no existe
+                    $directorio_destino = '../productos/';
+                    if (!file_exists($directorio_destino)) {
+                        mkdir($directorio_destino, 0777, true);
+                    }
+                    
+                    // Generar nombre único
+                    $nombre_unico = uniqid() . '_' . $nombre_archivo;
+                    $ruta_destino = $directorio_destino . $nombre_unico;
+                    
+                    // Mover archivo
+                    if (move_uploaded_file($temp_archivo, $ruta_destino)) {
+                        $imagenes_finales[] = 'productos/' . $nombre_unico;
+                    } else {
+                        $error = 'Error al subir una imagen adicional.';
+                        break;
+                    }
+                }
             }
         }
     }
@@ -89,12 +163,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Si no hay errores, actualizar en la base de datos
     if (empty($error)) {
+        // Preparar el JSON de imágenes adicionales (excluyendo la principal)
+        $imagenes_adicionales = array_slice($imagenes_finales, 1);
+        $imagenes_json = json_encode($imagenes_adicionales);
+        
         $sql = "UPDATE productos SET 
                 nombre = '$nombre', 
                 precio_costo = $precio_costo,
                 multiplicador = $multiplicador,
                 precio = $precio, 
-                imagen = '$imagen', 
+                imagen = '$imagen_principal', 
+                imagenes = '$imagenes_json',
                 categoria = '$categoria', 
                 descripcion = '$descripcion', 
                 caracteristicas = '$caracteristicas', 
@@ -108,6 +187,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Actualizar datos del producto
             $resultado = query("SELECT * FROM productos WHERE id = $id LIMIT 1");
             $producto = $resultado->fetch_assoc();
+            
+            // Actualizar array de imágenes
+            $imagenes = [];
+            if (!empty($producto['imagen'])) {
+                $imagenes[] = $producto['imagen'];
+            }
+            if (!empty($producto['imagenes'])) {
+                $imagenes_array = json_decode($producto['imagenes'], true);
+                if (is_array($imagenes_array)) {
+                    foreach ($imagenes_array as $img) {
+                        if (!in_array($img, $imagenes)) {
+                            $imagenes[] = $img;
+                        }
+                    }
+                }
+            }
+            
             // Redireccionar después de 2 segundos
             header('Refresh: 2; URL=productos.php?mensaje=Producto actualizado correctamente');
         } else {
@@ -250,14 +346,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .submit-btn:hover {
             background-color: #7a4a37;
         }
-        .current-image {
-            margin-bottom: 10px;
+        
+        /* Estilos para múltiples imágenes */
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
         }
-        .current-image img {
-            max-width: 150px;
-            border-radius: 4px;
+
+        .image-preview {
+            width: 100px;
+            height: 100px;
             border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
         }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .current-images {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .current-image-item {
+            position: relative;
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+        }
+
+        .current-image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .current-image-item .is-principal {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #945a42;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .current-image-item .remove-current {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #c62828;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
         small {
             display: block;
             color: #666;
@@ -421,16 +584,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
                 
+                <!-- Imágenes actuales -->
                 <div class="form-group">
-                    <label for="imagen">Imagen del Producto</label>
-                    <?php if ($producto['imagen']): ?>
-                        <div class="current-image">
-                            <p>Imagen actual:</p>
-                            <img src="../<?php echo $producto['imagen']; ?>" alt="<?php echo $producto['nombre']; ?>">
-                        </div>
-                    <?php endif; ?>
+                    <label>Imágenes Actuales</label>
+                    <div class="current-images">
+                        <?php if (!empty($imagenes)): ?>
+                            <?php foreach ($imagenes as $index => $img): ?>
+                                <div class="current-image-item">
+                                    <?php if ($img === $producto['imagen']): ?>
+                                        <span class="is-principal">Principal</span>
+                                    <?php endif; ?>
+                                    <img src="../<?php echo $img; ?>" alt="<?php echo $producto['nombre']; ?>">
+                                    <input type="checkbox" name="imagenes_actuales[]" value="<?php echo $img; ?>" checked style="display: none;">
+                                    <button type="button" class="remove-current" data-image="<?php echo $img; ?>">×</button>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p>No hay imágenes disponibles.</p>
+                        <?php endif; ?>
+                    </div>
+                    <small>Puedes eliminar imágenes haciendo clic en la X. La imagen principal se usa como miniatura en la tienda.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="imagen">Cambiar Imagen Principal</label>
                     <input type="file" id="imagen" name="imagen">
-                    <small>Deja este campo vacío si no quieres cambiar la imagen actual.</small>
+                    <small>Deja este campo vacío si no quieres cambiar la imagen principal actual.</small>
+                    <div id="preview-principal" class="image-preview-container"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Agregar Imágenes Adicionales</label>
+                    <input type="file" id="imagenes_adicionales" name="imagenes_adicionales[]" multiple>
+                    <small>Puedes seleccionar múltiples imágenes para agregar. Formatos permitidos: JPG, PNG.</small>
+                    <div id="preview-adicionales" class="image-preview-container"></div>
                 </div>
                 
                 <div class="form-group">
@@ -475,36 +662,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </button>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const precioCostoInput = document.getElementById('precio_costo');
-        const multiplicadorInput = document.getElementById('multiplicador');
-        const precioInput = document.getElementById('precio');
-        const mobileSubmitBtn = document.getElementById('mobile-submit');
-        const form = document.getElementById('producto-form');
+document.addEventListener('DOMContentLoaded', function() {
+    const precioCostoInput = document.getElementById('precio_costo');
+    const multiplicadorInput = document.getElementById('multiplicador');
+    const precioInput = document.getElementById('precio');
+    const mobileSubmitBtn = document.getElementById('mobile-submit');
+    const form = document.getElementById('producto-form');
+    const imagenPrincipalInput = document.getElementById('imagen');
+    const imagenesAdicionalesInput = document.getElementById('imagenes_adicionales');
+    const previewPrincipal = document.getElementById('preview-principal');
+    const previewAdicionales = document.getElementById('preview-adicionales');
+    const removeCurrentBtns = document.querySelectorAll('.remove-current');
+    
+    // Función para calcular el precio
+    function calcularPrecio() {
+        const costo = parseFloat(precioCostoInput.value) || 0;
+        const multiplicador = parseFloat(multiplicadorInput.value) || 0;
         
-        // Función para calcular el precio
-        function calcularPrecio() {
-            const costo = parseFloat(precioCostoInput.value) || 0;
-            const multiplicador = parseFloat(multiplicadorInput.value) || 0;
-            
-            if (costo > 0 && multiplicador > 0) {
-                const precio = costo * multiplicador;
-                precioInput.value = precio.toFixed(2);
+        if (costo > 0 && multiplicador > 0) {
+            const precio = costo * multiplicador;
+            precioInput.value = precio.toFixed(2);
+        }
+    }
+    
+    // Eventos para recalcular el precio
+    precioCostoInput.addEventListener('input', calcularPrecio);
+    multiplicadorInput.addEventListener('input', calcularPrecio);
+    
+    // Evento para el botón flotante en móvil
+    mobileSubmitBtn.addEventListener('click', function() {
+        form.submit();
+    });
+    
+    // Calcular precio inicial
+    calcularPrecio();
+    
+    // Previsualización de imagen principal
+    imagenPrincipalInput.addEventListener('change', function() {
+        previewPrincipal.innerHTML = '';
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'image-preview';
+                previewDiv.innerHTML = `
+                    <img src="${e.target.result}" alt="Vista previa">
+                `;
+                previewPrincipal.appendChild(previewDiv);
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    // Previsualización de imágenes adicionales
+    imagenesAdicionalesInput.addEventListener('change', function() {
+        previewAdicionales.innerHTML = '';
+        if (this.files && this.files.length > 0) {
+            for (let i = 0; i < this.files.length; i++) {
+                const reader = new FileReader();
+                const file = this.files[i];
+                
+                reader.onload = function(e) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'image-preview';
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="Vista previa ${i+1}">
+                    `;
+                    previewAdicionales.appendChild(previewDiv);
+                }
+                
+                reader.readAsDataURL(file);
             }
         }
-        
-        // Eventos para recalcular el precio
-        precioCostoInput.addEventListener('input', calcularPrecio);
-        multiplicadorInput.addEventListener('input', calcularPrecio);
-        
-        // Evento para el botón flotante en móvil
-        mobileSubmitBtn.addEventListener('click', function() {
-            form.submit();
-        });
-        
-        // Calcular precio inicial
-        calcularPrecio();
     });
-    </script>
+    
+    // Eliminar imágenes actuales
+    removeCurrentBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const image = this.getAttribute('data-image');
+            const checkbox = this.previousElementSibling;
+            checkbox.checked = false;
+            this.parentElement.style.opacity = '0.3';
+        });
+    });
+});
+</script>
 </body>
 </html>
+

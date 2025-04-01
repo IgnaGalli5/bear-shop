@@ -29,6 +29,7 @@ SELECT p.*,
        pr.nombre as nombre_promocion, 
        pr.tipo as tipo_promocion, 
        pr.valor as valor_promocion,
+       pr.activa as promocion_activa,
        CASE 
            WHEN pr.id IS NOT NULL AND pr.activa = 1 
                 AND pr.fecha_inicio <= CURDATE() 
@@ -75,6 +76,30 @@ ORDER BY p.id
           $caracteristicas = explode("\n", $producto['caracteristicas']);
       }
       
+      // Procesar imágenes como array
+      $imagenes = [];
+      if (!empty($producto['imagen'])) {
+          $imagenes[] = $producto['imagen']; // Añadir imagen principal
+      }
+
+      // Añadir imágenes adicionales si existen
+      if (!empty($producto['imagenes'])) {
+          $imagenes_json = $producto['imagenes'];
+          $imagenes_array = json_decode($imagenes_json, true);
+          if (is_array($imagenes_array) && !empty($imagenes_array)) {
+              foreach ($imagenes_array as $img) {
+                  if (!in_array($img, $imagenes)) { // Evitar duplicados
+                      $imagenes[] = $img;
+                  }
+              }
+          }
+      }
+      
+      // Si no hay imágenes en el array pero hay imagen principal, usarla
+      if (empty($imagenes) && !empty($producto['imagen'])) {
+          $imagenes = [$producto['imagen']];
+      }
+      
       // Determinar si hay precio promocional activo
       $precio_mostrar = $producto['precio'];
       $precio_original = null;
@@ -83,7 +108,7 @@ ORDER BY p.id
       $tipo_promocion = null;
       $valor_promocion = null;
       
-      if (isset($producto['promocion_id']) && !empty($producto['promocion_id'])) {
+      if (isset($producto['promocion_id']) && !empty($producto['promocion_id']) && isset($producto['promocion_activa']) && $producto['promocion_activa'] == 1) {
           // Verificar si la promoción está activa y vigente
           $promocion = obtenerResultados("
               SELECT * FROM promociones 
@@ -96,7 +121,7 @@ ORDER BY p.id
           if (!empty($promocion)) {
               $enPromocion = true;
               $precio_original = $producto['precio'];
-              $precio_mostrar = isset($producto['precio_promocion']) ? $producto['precio_promocion'] : $precio_mostrar;
+              $precio_mostrar = isset($producto['precio_promocion']) && $producto['precio_promocion'] > 0 ? $producto['precio_promocion'] : $precio_mostrar;
               $nombre_promocion = $producto['nombre_promocion'];
               $tipo_promocion = $producto['tipo_promocion'];
               $valor_promocion = $producto['valor_promocion'];
@@ -119,6 +144,7 @@ ORDER BY p.id
           'installments' => $cuotas,
           'installmentPrice' => (float)$precio_cuota,
           'image' => isset($producto['imagen']) ? $producto['imagen'] : 'productos/default.jpg',
+          'images' => $imagenes,
           'category' => isset($producto['categoria']) ? $producto['categoria'] : '',
           'description' => isset($producto['descripcion']) ? $producto['descripcion'] : '',
           'features' => $caracteristicas,
@@ -130,34 +156,8 @@ ORDER BY p.id
       ];
   }
 
-  // OPCIÓN 1: Solo devolver los productos (recomendado para producción)
+  // Devolver los productos
   echo json_encode($productosFormateados, JSON_UNESCAPED_UNICODE);
-  
-  // OPCIÓN 2: Devolver productos con información de depuración (solo para desarrollo)
-  // Descomentar esto y comentar la línea anterior si necesitas depurar
-  /*
-  $debug_info = [
-      'promociones_activas' => obtenerResultados("
-          SELECT * FROM promociones 
-          WHERE activa = 1 
-          AND fecha_inicio <= CURDATE() 
-          AND fecha_fin >= CURDATE()
-      "),
-      'productos_en_promocion' => obtenerResultados("
-          SELECT id, nombre, precio, precio_promocion, promocion_id 
-          FROM productos 
-          WHERE promocion_id IS NOT NULL
-      "),
-      'descuento_efectivo' => $descuento_efectivo
-  ];
-  
-  $respuesta = [
-      'productos' => $productosFormateados,
-      'debug' => $debug_info
-  ];
-  
-  echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
-  */
   
 } catch (Exception $e) {
   // Devolver error en formato JSON
