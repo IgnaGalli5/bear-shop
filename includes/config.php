@@ -1,31 +1,25 @@
+
+
 <?php
+// Configuración general del sitio
+define('SITE_NAME', 'Bear.Shop');
+define('SITE_URL', 'http://localhost/bear_shop'); // Actualiza esto a tu URL real
+
+/// Configuración de MercadoPago
+define('MERCADOPAGO_PUBLIC_KEY', 'APP_USR-53b4213a-8ab6-4725-9b77-edb54c8d36c9'); // Reemplaza con tu clave pública
+define('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-1066541917730952-041013-f1bc67c6c8b6ed53791c55e662bf4450-2384869526'); // Reemplaza con tu token de acceso
+
 // Configuración de la base de datos
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'bear_shop');
 
-// Configuración de la aplicación
-define('SITE_URL', 'http://localhost/bear_shop');
-define('ADMIN_URL', SITE_URL . '/admin');
-define('API_URL', SITE_URL . '/api');
+// Otras configuraciones
+define('CASH_DISCOUNT_PERCENT', 10); // Porcentaje de descuento para pagos en efectivo
 
-// Configuración de sesión
-session_start();
+// Configuración de entorno (producción o prueba)
+define('MERCADOPAGO_ENV', 'test'); // Cambiar a 'prod' para producción
+?>
 
 
-//<?php
-// Configuración de la base de datos para Hostinger
-//define('DB_HOST', 'localhost'); // En la mayoría de los casos, sigue siendo 'localhost' en Hostinger
-//define('DB_USER', 'u755296999_bear'); // Tu usuario en Hostinger
-//define('DB_PASS', '$6SKlQpujZp'); // Tu contraseña en Hostinger
-//define('DB_NAME', 'u755296999_bear'); // Nombre de la base de datos en Hostinger
-
-// Configuración de la aplicación para producción
-//define('SITE_URL', 'https://bearshop.com.ar'); // URL de tu sitio en producción
-//define('ADMIN_URL', SITE_URL . '/admin');
-//define('API_URL', SITE_URL . '/api');
-
-// Configuración de sesión
-//session_start();
-//?

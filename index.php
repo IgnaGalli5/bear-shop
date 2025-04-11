@@ -317,12 +317,12 @@ function formatearPrecioFront($precio) {
                         <h4>Método de pago:</h4>
                         <div class="payment-options">
                             <label>
-                                <input type="radio" name="payment" value="efectivo" checked id="payment-efectivo">
-                                <span>Efectivo (10% de descuento)</span>
+                                <input type="radio" name="payment" value="mercadopago" id="payment-mercadopago" checked>
+                                <span>Mercado Pago (tarjetas, transferencia y más)</span>
                             </label>
                             <label>
-                                <input type="radio" name="payment" value="mercadopago" id="payment-mercadopago">
-                                <span>Mercado Pago</span>
+                                <input type="radio" name="payment" value="efectivo" id="payment-efectivo">
+                                <span>Efectivo (10% de descuento)</span>
                             </label>
                             <label>
                                 <input type="radio" name="payment" value="transferencia" id="payment-transferencia">
@@ -331,7 +331,7 @@ function formatearPrecioFront($precio) {
                         </div>
                     </div>
                     
-                    <button id="checkout-btn" class="btn">Finalizar compra</button>
+                    <button id="checkout-btn" class="btn" disabled>Finalizar compra</button>
                 </div>
             </div>
         </div>
@@ -366,14 +366,19 @@ function formatearPrecioFront($precio) {
                     <label for="customer-cp">Codigo Postal</label>
                     <input type="cp" id="customer-cp" required>
                 </div>
+               <!-- <button id="checkout-btn" class="btn" onclick="window.location.href='checkout.php'">Finalizar compra</button>-->
+                
                 <div class="form-group">
-                    <label for="customer-name">Aclaraciones</label>
-                    <input type="cp" id="customer-name" required placeholder="Ingrese detalle del producto, por ejemplo , la tonalidad o color">
+                    <label for="customer-details">Aclaraciones</label>
+                    <input type="cp" id="customer-details" required placeholder="Ingrese detalle del producto, por ejemplo , la tonalidad o color">
                 </div>
                 <button type="submit" class="btn">Enviar pedido</button>
             </form>
         </div>
     </div>
+
+                    
+
 
     <!-- Modal para detalles de producto -->
     <div id="product-modal" class="modal">
@@ -561,6 +566,91 @@ function formatearPrecioFront($precio) {
             updateTotalWithDiscount();
         });
     </script>
+    <script>
+// Función para manejar el proceso de checkout
+document.getElementById('checkout-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Verificar si hay productos en el carrito
+    const cart = getCart();
+    if (cart.length === 0) {
+        alert('Tu carrito está vacío');
+        return;
+    }
+    
+    // Verificar si se ha calculado el envío
+    const shippingAddress = localStorage.getItem('bearShopShippingAddress');
+    if (!shippingAddress) {
+        alert('Por favor calcula el costo de envío antes de continuar');
+        return;
+    }
+    
+    // Obtener el método de pago seleccionado
+    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+    localStorage.setItem('bearShopPaymentMethod', paymentMethod);
+    
+    // Redirigir a la página de checkout
+    window.location.href = 'checkout.php';
+});
+
+// Modificar la función verificarEnvioCalculado para que siempre habilite el botón
+function verificarEnvioCalculado() {
+   const checkoutBtn = document.getElementById('checkout-btn');
+   
+   // Siempre habilitar el botón de checkout
+   checkoutBtn.disabled = false;
+   checkoutBtn.title = 'Proceder al pago';
+   
+   // Opcional: Mostrar una advertencia si no se ha calculado el envío
+   const shippingAddress = localStorage.getItem('bearShopShippingAddress');
+   if (!shippingAddress && checkoutBtn) {
+       checkoutBtn.title = 'Proceder al pago (no se ha calculado el envío)';
+   }
+}
+
+// Verificar al cargar la página
+document.addEventListener('DOMContentLoaded', verificarEnvioCalculado);
+
+// Verificar cuando cambia el carrito
+window.addEventListener('storage', function(e) {
+    if (e.key === 'bearShopShippingAddress') {
+        verificarEnvioCalculado();
+    }
+});
+</script>
+<script>
+// Función para manejar el proceso de checkout
+document.getElementById('checkout-btn').addEventListener('click', function(e) {
+  e.preventDefault();
+  
+  // Verificar si hay productos en el carrito
+  const cart = getCart();
+  if (cart.length === 0) {
+    alert('Tu carrito está vacío');
+    return;
+  }
+  
+  // Obtener el método de pago seleccionado
+  const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+  localStorage.setItem('bearShopPaymentMethod', paymentMethod);
+  
+  // Redirigir a la página de checkout
+  window.location.href = 'checkout.php';
+});
+
+// Modificar la función verificarEnvioCalculado para que siempre habilite el botón
+function verificarEnvioCalculado() {
+  const checkoutBtn = document.getElementById('checkout-btn');
+  
+  // Siempre habilitar el botón de checkout
+  if (checkoutBtn) {
+    checkoutBtn.disabled = false;
+    checkoutBtn.title = 'Proceder al pago';
+  }
+}
+
+// Verificar al cargar la página
+document.addEventListener('DOMContentLoaded', verificarEnvioCalculado);
+</script>
 </body>
 </html>
-

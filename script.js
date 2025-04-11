@@ -554,6 +554,7 @@ function debugCartCalculations() {
   // Envío
   const FREE_SHIPPING_THRESHOLD = 60000
   const SHIPPING_COST = 2500
+  
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
   console.log(`Costo de envío: ${shippingCost} (Umbral para envío gratis: ${FREE_SHIPPING_THRESHOLD})`)
 
@@ -760,9 +761,9 @@ function openProductModal(productId) {
   if (product.images && Array.isArray(product.images) && product.images.length > 0) {
     setupProductImageCarousel(product.images, modalProductImage)
   } else if (product.image) {
-    modalProductImage.innerHTML = `<img src="${product.image}" alt="${product.name}">`
+    modalProductImage.innerHTML = `<img src="${product.image}" alt="${product.name}" class="single-product-image">`
   } else {
-    modalProductImage.innerHTML = `<img src="productos/default.jpg" alt="${product.name}">`
+    modalProductImage.innerHTML = `<img src="productos/default.jpg" alt="${product.name}" class="single-product-image">`
   }
 
   // Resetear cantidad
@@ -771,6 +772,31 @@ function openProductModal(productId) {
 
   // Mostrar modal
   productModal.style.display = "block"
+
+  // Ajustar el tamaño del contenedor de la imagen después de que el modal esté visible
+  setTimeout(() => {
+    const productDetailImage = productModal.querySelector(".product-detail-image")
+    if (productDetailImage) {
+      const productDetailContent = productDetailImage.closest(".product-detail-content")
+      if (productDetailContent) {
+        const productDetailInfo = productDetailContent.querySelector(".product-detail-info")
+        if (productDetailInfo) {
+          // Calcular el espacio disponible hasta el final del modal
+          const modalContent = productDetailImage.closest(".modal-content")
+          if (modalContent) {
+            const modalHeight = modalContent.offsetHeight
+            const imageTop = productDetailImage.offsetTop
+            const infoHeight = productDetailInfo.offsetHeight
+            const footerHeight = 20 // Espacio para el pie
+
+            // Ajustar la altura para que llegue hasta el límite inferior
+            const newHeight = modalHeight - imageTop - footerHeight
+            productDetailImage.style.height = `${newHeight}px`
+          }
+        }
+      }
+    }
+  }, 100)
 }
 
 // Cargar más productos: aumenta la cantidad de productos visibles
@@ -998,10 +1024,12 @@ function updateCartTotals() {
   // Obtener elementos del DOM
   const cartSubtotalElement = document.getElementById("cart-subtotal")
   const cartTotalElement = document.getElementById("cart-total")
+  const cartShippingElement = document.getElementById("cart-shipping")
 
   // Si el carrito está vacío, mostrar valores en cero y salir
   if (cart.length === 0) {
     if (cartSubtotalElement) cartSubtotalElement.textContent = "$0"
+    if (cartShippingElement) cartShippingElement.textContent = "$0"
     if (cartTotalElement) cartTotalElement.textContent = "$0"
     return
   }
@@ -1014,10 +1042,6 @@ function updateCartTotals() {
 
   // Configuración de envío gratuito
   const FREE_SHIPPING_THRESHOLD = 60000 // $60.000 para envío gratis
-  const SHIPPING_COST = 2500 // Costo de envío estándar
-
-  // Determinar si aplica envío gratuito
-  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
 
   // Mostrar subtotal y mensaje de envío gratis si corresponde
   if (cartSubtotalElement) {
@@ -1029,8 +1053,33 @@ function updateCartTotals() {
     }
   }
 
+  // Obtener el costo de envío (si ya se calculó)
+  let shippingCost = 0
+  const shippingData = localStorage.getItem("bearShopShippingCost")
+  if (shippingData) {
+    shippingCost = parseFloat(shippingData)
+  } else {
+    // Valor por defecto si no se ha calculado
+    shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 2500
+  }
+
+  // Verificar si califica para envío gratis
+  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
+  if (freeShipping) {
+    shippingCost = 0
+  }
+
+  // Mostrar costo de envío
+  if (cartShippingElement) {
+    if (freeShipping) {
+      cartShippingElement.innerHTML = '<span class="free-shipping">Gratis</span>'
+    } else {
+      cartShippingElement.textContent = `$${formatPrice(shippingCost)}`
+    }
+  }
+
   // Calcular total (subtotal + envío)
-  const totalWithShipping = subtotal + shippingCost
+  const totalWithShipping = subtotal + (freeShipping ? 0 : shippingCost)
 
   // Verificar método de pago seleccionado
   const paymentEfectivo = document.getElementById("payment-efectivo")
@@ -1052,6 +1101,9 @@ function updateCartTotals() {
 
   // Guardar el costo de envío en una variable global para usarlo en el checkout
   window.currentShippingCost = shippingCost
+  
+  // Verificar si se ha calculado el envío
+  verificarEnvioCalculado()
 }
 
 // Finalizar compra: muestra el modal de checkout
@@ -1078,9 +1130,17 @@ function processCheckout(event) {
   const customerPhone = document.getElementById("customer-celphone").value.trim()
   const customerAddress = document.getElementById("customer-adress").value.trim()
   const customerPostalCode = document.getElementById("customer-cp").value.trim()
+  const customerDetails = document.getElementById("customer-details").value.trim()
 
   // Validar campos obligatorios
-  if (!customerName || !customerEmail || !customerPhone || !customerAddress || !customerPostalCode) {
+  if (
+    !customerName ||
+    !customerEmail ||
+    !customerPhone ||
+    !customerAddress ||
+    !customerPostalCode ||
+    !customerDetails
+  ) {
     showNotification("Por favor complete todos los campos")
     return
   }
@@ -1120,6 +1180,7 @@ function processCheckout(event) {
   message += `- Teléfono: ${customerPhone}\n`
   message += `- Dirección: ${customerAddress}\n`
   message += `- Código Postal: ${customerPostalCode}\n\n`
+  message += `- Detalles: ${customerDetails}\n\n`
 
   message += `*Productos:*\n`
   cart.forEach((item, index) => {
@@ -1135,7 +1196,7 @@ function processCheckout(event) {
   const encodedMessage = encodeURIComponent(message)
 
   // Número de WhatsApp (reemplazar con el número correcto)
-  const whatsappNumber = "5491112345678" // Reemplazar con el número real
+  const whatsappNumber = "5491122834351" // Reemplazar con el número real
 
   // Crear URL de WhatsApp
   const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`
@@ -1297,26 +1358,17 @@ function filterByCategory(category) {
   renderProducts()
 }
 
-// Configurar carrusel de imágenes
-// Modificar la función setupProductImageCarousel para ajustar las imágenes
+// Configurar carrusel de imágenes - VERSIÓN MEJORADA
+// Modificar la función setupProductImageCarousel para que las imágenes se muestren completas
 function setupProductImageCarousel(images, container) {
   if (!container) {
     console.error("Contenedor de imágenes no encontrado")
     return
   }
 
-  // Asegurarse de que images sea un array
+  // Normalizar imágenes a un array
   if (!Array.isArray(images)) {
-    console.warn("images no es un array:", images)
-    // Convertir a array si es posible
-    if (typeof images === "string") {
-      images = [images]
-    } else if (!images) {
-      images = ["productos/default.jpg"]
-    } else {
-      console.error("No se puede procesar el tipo de images:", typeof images)
-      return
-    }
+    images = typeof images === "string" ? [images] : ["productos/default.jpg"]
   }
 
   if (images.length === 0) {
@@ -1326,85 +1378,603 @@ function setupProductImageCarousel(images, container) {
   // Limpiar el contenedor
   container.innerHTML = ""
 
-  // Si solo hay una imagen, mostrarla sin controles
-  if (images.length === 1) {
-    container.innerHTML = `<img src="${images[0]}" alt="Imagen del producto" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">`
-    return
-  }
+  // Precargar imágenes para determinar proporciones
+  const preloadImages = images.map((src) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = "anonymous" // Evitar problemas CORS
+      img.onload = () => {
+        resolve({
+          src,
+          width: img.width,
+          height: img.height,
+          aspectRatio: img.width / img.height,
+          isVertical: img.height > img.width,
+        })
+      }
+      img.onerror = () => {
+        resolve({
+          src,
+          width: 0,
+          height: 0,
+          aspectRatio: 1,
+          isVertical: false,
+        })
+      }
+      img.src = src
+    })
+  })
 
-  // Crear estructura del carrusel
-  const carouselHTML = `
-    <div class="product-image-carousel">
-      <div class="carousel-main">
-        <img src="${images[0]}" alt="Imagen del producto">
-        <button class="carousel-prev"><i class="fas fa-chevron-left"></i></button>
-        <button class="carousel-next"><i class="fas fa-chevron-right"></i></button>
-      </div>
-      <div class="carousel-thumbnails">
-        ${images
-          .map(
-            (img, index) => `
-          <div class="thumbnail ${index === 0 ? "active" : ""}" data-index="${index}">
-            <img src="${img}" alt="Miniatura ${index + 1}">
+  Promise.all(preloadImages).then((imageData) => {
+    // Si solo hay una imagen, mostrarla sin controles
+    if (images.length === 1) {
+      const imgData = imageData[0]
+      container.innerHTML = `
+        <div class="single-image-container">
+          <img 
+            src="${imgData.src}" 
+            alt="Imagen del producto" 
+            class="single-product-image"
+          >
+        </div>
+      `
+      return
+    }
+
+    // Crear estructura del carrusel con miniaturas superpuestas
+    const carouselHTML = `
+      <div class="product-image-carousel">
+        <div class="carousel-main">
+          <img 
+            src="${imageData[0].src}" 
+            alt="Imagen del producto" 
+            class="carousel-main-image"
+          >
+          <button class="carousel-prev"><i class="fas fa-chevron-left"></i></button>
+          <button class="carousel-next"><i class="fas fa-chevron-right"></i></button>
+          <div class="carousel-thumbnails">
+            ${imageData
+              .map(
+                (img, index) => `
+              <div class="thumbnail ${index === 0 ? "active" : ""}" data-index="${index}">
+                <img src="${img.src}" alt="Miniatura ${index + 1}">
+              </div>
+            `,
+              )
+              .join("")}
           </div>
-        `,
-          )
-          .join("")}
+        </div>
       </div>
-    </div>
-  `
+    `
 
-  container.innerHTML = carouselHTML
+    container.innerHTML = carouselHTML
 
-  // Configurar eventos
-  const mainImg = container.querySelector(".carousel-main img")
-  const prevBtn = container.querySelector(".carousel-prev")
-  const nextBtn = container.querySelector(".carousel-next")
-  const thumbnails = container.querySelectorAll(".thumbnail")
-  let currentIndex = 0
+    // Configurar eventos
+    const mainImg = container.querySelector(".carousel-main-image")
+    const prevBtn = container.querySelector(".carousel-prev")
+    const nextBtn = container.querySelector(".carousel-next")
+    const thumbnails = container.querySelectorAll(".thumbnail")
+    const thumbnailsContainer = container.querySelector(".carousel-thumbnails")
+    let currentIndex = 0
+    let thumbnailsTimeout = null
 
-  // Función para cambiar la imagen
-  function changeImage(index) {
-    if (index < 0) index = images.length - 1
-    if (index >= images.length) index = 0
+    // Función para cambiar la imagen
+    function changeImage(index) {
+      if (index < 0) index = imageData.length - 1
+      if (index >= imageData.length) index = 0
 
-    currentIndex = index
-    mainImg.src = images[index]
+      currentIndex = index
+      const imgData = imageData[index]
 
-    // Actualizar miniaturas activas
-    thumbnails.forEach((thumb, i) => {
-      if (i === index) {
-        thumb.classList.add("active")
-      } else {
-        thumb.classList.remove("active")
+      mainImg.src = imgData.src
+
+      // Actualizar miniaturas activas
+      thumbnails.forEach((thumb, i) => {
+        if (i === index) {
+          thumb.classList.add("active")
+          thumb.style.border = "2px solid #a44"
+        } else {
+          thumb.classList.remove("active")
+          thumb.style.border = "2px solid transparent"
+        }
+      })
+    }
+
+    // Función para mostrar las miniaturas
+    function showThumbnails() {
+      if (thumbnailsContainer) {
+        thumbnailsContainer.classList.add("visible")
+
+        // Reiniciar el temporizador para ocultar las miniaturas
+        if (thumbnailsTimeout) {
+          clearTimeout(thumbnailsTimeout)
+        }
+
+        thumbnailsTimeout = setTimeout(() => {
+          hideThumbnails()
+        }, 2000) // Ocultar después de 2 segundos de inactividad
+      }
+    }
+
+    // Función para ocultar las miniaturas
+    function hideThumbnails() {
+      if (thumbnailsContainer) {
+        thumbnailsContainer.classList.remove("visible")
+      }
+    }
+
+    // Eventos de botones
+    if (prevBtn) {
+      prevBtn.addEventListener("click", (e) => {
+        e.preventDefault()
+        changeImage(currentIndex - 1)
+        showThumbnails() // Mostrar miniaturas al navegar
+      })
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener("click", (e) => {
+        e.preventDefault()
+        changeImage(currentIndex + 1)
+        showThumbnails() // Mostrar miniaturas al navegar
+      })
+    }
+
+    // Evento para mostrar miniaturas al hacer clic en la imagen principal
+    if (mainImg) {
+      mainImg.addEventListener("click", (e) => {
+        e.preventDefault()
+        showThumbnails()
+      })
+    }
+
+    // Eventos de miniaturas
+    thumbnails.forEach((thumb) => {
+      thumb.addEventListener("click", function () {
+        const index = Number.parseInt(this.getAttribute("data-index"), 10)
+        changeImage(index)
+        showThumbnails() // Reiniciar el temporizador
+      })
+
+      // Reiniciar el temporizador al pasar el mouse por encima
+      thumb.addEventListener("mouseover", () => {
+        showThumbnails()
+      })
+    })
+
+    // Reiniciar el temporizador cuando el mouse se mueve sobre el contenedor
+    container.addEventListener("mousemove", () => {
+      showThumbnails()
+    })
+
+    // Implementar navegación con teclado
+    container.setAttribute("tabindex", "0")
+    container.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        changeImage(currentIndex - 1)
+        showThumbnails()
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault()
+        changeImage(currentIndex + 1)
+        showThumbnails()
       }
     })
-  }
 
-  // Eventos de botones
-  if (prevBtn) {
-    prevBtn.addEventListener("click", (e) => {
-      e.preventDefault()
-      changeImage(currentIndex - 1)
-    })
-  }
+    // Implementar gestos táctiles para móviles
+    let touchStartX = 0
+    let touchEndX = 0
 
-  if (nextBtn) {
-    nextBtn.addEventListener("click", (e) => {
-      e.preventDefault()
-      changeImage(currentIndex + 1)
-    })
-  }
+    const handleSwipe = () => {
+      const swipeThreshold = 50
+      if (touchStartX - touchEndX > swipeThreshold) {
+        // Swipe izquierda (siguiente)
+        changeImage(currentIndex + 1)
+        showThumbnails()
+      } else if (touchEndX - touchStartX > swipeThreshold) {
+        // Swipe derecha (anterior)
+        changeImage(currentIndex - 1)
+        showThumbnails()
+      }
+    }
 
-  // Eventos de miniaturas
-  thumbnails.forEach((thumb) => {
-    thumb.addEventListener("click", function () {
-      const index = Number.parseInt(this.getAttribute("data-index"), 10)
-      changeImage(index)
+    container.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX
+      showThumbnails() // Mostrar miniaturas al tocar
     })
+
+    container.addEventListener("touchend", (e) => {
+      touchEndX = e.changedTouches[0].screenX
+      handleSwipe()
+    })
+
+    // Mostrar miniaturas al pasar el mouse sobre el contenedor
+    container.addEventListener("mouseenter", showThumbnails)
+
+    // Ocultar miniaturas al salir del contenedor
+    container.addEventListener("mouseleave", hideThumbnails)
+
+    // Ajustar el contenedor para que ocupe todo el espacio disponible
+    // Esto se hace después de cargar las imágenes para asegurar que todo esté listo
+    setTimeout(() => {
+      const productDetailContent = container.closest(".product-detail-content")
+      if (productDetailContent) {
+        const productDetailInfo = productDetailContent.querySelector(".product-detail-info")
+        if (productDetailInfo) {
+          // Ajustar la altura del contenedor para que llegue hasta el límite inferior
+          const modalContent = container.closest(".modal-content")
+          if (modalContent) {
+            const modalHeight = modalContent.offsetHeight
+            const infoTop = productDetailInfo.offsetTop
+            const infoHeight = productDetailInfo.offsetHeight
+            const availableHeight = modalHeight - infoTop
+
+            // Asegurar que la imagen tenga suficiente espacio
+            container.style.height = `${availableHeight}px`
+          }
+        }
+      }
+    }, 100)
   })
 }
 
+// Función para mostrar el formulario de envío
+function mostrarFormularioEnvio() {
+  const cartSummary = document.getElementById("cart-summary");
+  if (!cartSummary) return;
+  
+  // Verificar si ya existe el formulario
+  if (document.getElementById("shipping-form")) return;
+  
+  // Obtener el carrito y calcular el subtotal
+  const cart = getCart();
+  const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const calificaEnvioGratis = subtotal >= 60000; // $60,000 para envío gratis
+  
+  // Mensaje de envío gratis si aplica
+  const mensajeEnvioGratis = calificaEnvioGratis
+    ? `<div class="free-shipping-message">
+        <p>¡Felicidades! Tu compra califica para envío gratis.</p>
+        <p>Igualmente necesitamos tus datos de envío para procesar tu pedido.</p>
+      </div>`
+    : "";
+  
+  const shippingFormHTML = `
+    <div id="shipping-form" class="shipping-form">
+      <h4>Datos de envío</h4>
+      <p class="shipping-origin">Envío desde: Parque Chacabuco (CP: 1406)</p>
+      ${mensajeEnvioGratis}
+      <div class="form-group">
+        <label for="shipping-address">Dirección</label>
+        <input type="text" id="shipping-address" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="shipping-city">Ciudad</label>
+          <input type="text" id="shipping-city" required>
+        </div>
+        <div class="form-group">
+          <label for="shipping-zipcode">Código Postal</label>
+          <div class="input-with-link">
+            <input type="text" id="shipping-zipcode" required>
+            <a href="https://www.correoargentino.com.ar/formularios/cpa" target="_blank" class="zipcode-link">¿No conoces tu código postal?</a>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="shipping-province">Provincia</label>
+        <select id="shipping-province" required>
+          <option value="">Seleccionar provincia</option>
+          <option value="C">Ciudad Autónoma de Buenos Aires</option>
+          <option value="B">Buenos Aires</option>
+          <option value="K">Catamarca</option>
+          <option value="H">Chaco</option>
+          <option value="U">Chubut</option>
+          <option value="X">Córdoba</option>
+          <option value="W">Corrientes</option>
+          <option value="E">Entre Ríos</option>
+          <option value="P">Formosa</option>
+          <option value="Y">Jujuy</option>
+          <option value="L">La Pampa</option>
+          <option value="F">La Rioja</option>
+          <option value="M">Mendoza</option>
+          <option value="N">Misiones</option>
+          <option value="Q">Neuquén</option>
+          <option value="R">Río Negro</option>
+          <option value="A">Salta</option>
+          <option value="J">San Juan</option>
+          <option value="D">San Luis</option>
+          <option value="Z">Santa Cruz</option>
+          <option value="S">Santa Fe</option>
+          <option value="G">Santiago del Estero</option>
+          <option value="V">Tierra del Fuego</option>
+          <option value="T">Tucumán</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="shipping-delivery-type">Tipo de entrega</label>
+        <select id="shipping-delivery-type" required>
+          <option value="D">Entrega a domicilio</option>
+          <option value="S">Retiro en sucursal</option>
+        </select>
+      </div>
+      <div id="shipping-agency-container" class="form-group" style="display: none;">
+        <label for="shipping-agency">Sucursal</label>
+        <select id="shipping-agency" disabled>
+          <option value="">Seleccione una provincia primero</option>
+        </select>
+      </div>
+      <button type="button" id="calculate-shipping" class="btn-small">Calcular envío</button>
+      <div id="shipping-result" class="shipping-result"></div>
+    </div>
+  `;
+  
+  // Insertar el formulario antes de las opciones de pago
+  const paymentMethods = document.querySelector(".payment-methods");
+  if (paymentMethods) {
+    paymentMethods.insertAdjacentHTML("beforebegin", shippingFormHTML);
+    
+    // Mostrar/ocultar selector de sucursal según el tipo de entrega
+    document.getElementById("shipping-delivery-type").addEventListener("change", function() {
+      const agencyContainer = document.getElementById("shipping-agency-container");
+      if (this.value === "S") {
+        agencyContainer.style.display = "block";
+        cargarSucursales();
+      } else {
+        agencyContainer.style.display = "none";
+      }
+    });
+    
+    // Cargar sucursales cuando cambia la provincia
+    document.getElementById("shipping-province").addEventListener("change", () => {
+      if (document.getElementById("shipping-delivery-type").value === "S") {
+        cargarSucursales();
+      }
+    });
+    
+    // Agregar evento al botón de calcular envío
+    document.getElementById("calculate-shipping").addEventListener("click", async () => {
+      const address = document.getElementById("shipping-address").value;
+      const city = document.getElementById("shipping-city").value;
+      const zipCode = document.getElementById("shipping-zipcode").value;
+      const province = document.getElementById("shipping-province").value;
+      const deliveryType = document.getElementById("shipping-delivery-type").value;
+      let agency = null;
+      
+      if (deliveryType === "S") {
+        agency = document.getElementById("shipping-agency").value;
+        if (!agency) {
+          document.getElementById("shipping-result").innerHTML = 
+            '<p class="error-message">Por favor selecciona una sucursal</p>';
+          return;
+        }
+      }
+      
+      if (!address || !city || !zipCode || !province) {
+        document.getElementById("shipping-result").innerHTML = 
+          '<p class="error-message">Por favor completa todos los campos</p>';
+        return;
+      }
+      
+      // Mostrar cargando
+      document.getElementById("shipping-result").innerHTML = 
+        '<p class="loading-message">Calculando costo de envío...</p>';
+      
+      // Obtener carrito
+      const cart = getCart();
+      
+      // Calcular envío
+      const shippingResult = await calcularEnvio({
+        streetName: address,
+        cityName: city,
+        zipCode: zipCode,
+        state: province,
+        deliveryType: deliveryType,
+        agency: agency
+      });
+      
+      // Mostrar resultado
+      if (shippingResult.success) {
+        let messageText = shippingResult.message || "Costo de envío calculado correctamente";
+        
+        // Agregar información de tiempo de entrega si está disponible
+        if (shippingResult.deliveryTimeMin && shippingResult.deliveryTimeMax) {
+          messageText += ` (Tiempo estimado de entrega: ${shippingResult.deliveryTimeMin}-${shippingResult.deliveryTimeMax} días hábiles)`;
+        }
+        
+        document.getElementById("shipping-result").innerHTML = `
+          <p class="success-message">${messageText}</p>
+          <p class="shipping-details">Servicio: ${shippingResult.productName || "Correo Argentino"}</p>
+        `;
+        
+        // Actualizar resumen del carrito
+        actualizarResumenConEnvio(shippingResult);
+        
+        // Habilitar botón de checkout
+        verificarEnvioCalculado();
+      } else {
+        document.getElementById("shipping-result").innerHTML = `
+          <p class="error-message">${shippingResult.message || "Error al calcular el envío"}</p>
+        `;
+      }
+    });
+  }
+}
+
+// Función para cargar sucursales
+async function cargarSucursales() {
+  const provinceSelect = document.getElementById("shipping-province");
+  const agencySelect = document.getElementById("shipping-agency");
+  
+  if (!provinceSelect || !agencySelect) return;
+  
+  const province = provinceSelect.value;
+  
+  if (!province) {
+    agencySelect.innerHTML = '<option value="">Seleccione una provincia primero</option>';
+    agencySelect.disabled = true;
+    return;
+  }
+  
+  // Mostrar cargando
+  agencySelect.innerHTML = '<option value="">Cargando sucursales...</option>';
+  agencySelect.disabled = true;
+  
+  try {
+    const response = await fetch(`api/obtener-sucursales.php?province=${province}`);
+    
+    if (!response.ok) {
+      throw new Error("Error al obtener sucursales");
+    }
+    
+    const data = await response.json();
+    
+    if (data.success && data.agencies && data.agencies.length > 0) {
+      // Llenar el select con las sucursales
+      agencySelect.innerHTML = '<option value="">Seleccione una sucursal</option>';
+      
+      data.agencies.forEach(agency => {
+        const option = document.createElement("option");
+        option.value = agency.code;
+        option.textContent = `${agency.name} - ${agency.location.address.streetName} ${agency.location.address.streetNumber}`;
+        agencySelect.appendChild(option);
+      });
+      
+      agencySelect.disabled = false;
+    } else {
+      agencySelect.innerHTML = '<option value="">No hay sucursales disponibles</option>';
+      agencySelect.disabled = true;
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    agencySelect.innerHTML = '<option value="">Error al cargar sucursales</option>';
+    agencySelect.disabled = true;
+  }
+}
+
+// Función para calcular el envío
+async function calcularEnvio(shippingAddress) {
+  try {
+    const cart = getCart();
+    
+    // Verificar que tengamos los datos mínimos necesarios
+    if (!shippingAddress.zipCode) {
+      throw new Error("Código postal de destino requerido");
+    }
+    
+    // Realizar la solicitud a la API
+    const response = await fetch("api/calcular-envio.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        cart: cart,
+        shippingAddress: shippingAddress,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al calcular el envío");
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.message || "Error al calcular el envío");
+    }
+    
+    // Guardar información de envío en localStorage
+    localStorage.setItem("bearShopShippingCost", data.shippingCost);
+    localStorage.setItem("bearShopFreeShipping", data.freeShipping ? "true" : "false");
+    localStorage.setItem("bearShopShippingOrigin", data.origin || "Parque Chacabuco (1406)");
+    localStorage.setItem("bearShopShippingProductName", data.productName || "Correo Argentino");
+    localStorage.setItem("bearShopShippingDeliveryTime", `${data.deliveryTimeMin || ""}-${data.deliveryTimeMax || ""}`);
+    localStorage.setItem("bearShopShippingAddress", JSON.stringify(shippingAddress));
+    
+    return data;
+  } catch (error) {
+    console.error("Error al calcular envío:", error);
+    
+    // Devolver un objeto de error
+    return {
+      success: false,
+      message: error.message || "Error al calcular el envío",
+      shippingCost: 2500, // Valor por defecto
+      freeShipping: false,
+      origin: "Parque Chacabuco (1406)"
+    };
+  }
+}
+
+// Función para actualizar el resumen del carrito con el costo de envío
+function actualizarResumenConEnvio(shippingResult) {
+  const subtotalElement = document.getElementById("cart-subtotal");
+  const totalElement = document.getElementById("cart-total");
+  const shippingElement = document.getElementById("cart-shipping");
+
+  if (!subtotalElement || !totalElement) return;
+
+  // Obtener el subtotal actual sin formato
+  const subtotalText = subtotalElement.textContent.replace("$", "").replace(/\./g, "").replace(",", ".");
+  const subtotal = Number.parseFloat(subtotalText);
+
+  // Datos del envío
+  const shippingCost = shippingResult.shippingCost;
+  const isFreeShipping = shippingResult.freeShipping;
+  const origin = shippingResult.origin || "Parque Chacabuco (1406)";
+  const deliveryTimeMin = shippingResult.deliveryTimeMin || "";
+  const deliveryTimeMax = shippingResult.deliveryTimeMax || "";
+  const productName = shippingResult.productName || "Correo Argentino";
+
+  // Texto de tiempo de entrega
+  let deliveryTimeText = "";
+  if (deliveryTimeMin && deliveryTimeMax) {
+    deliveryTimeText = ` (${deliveryTimeMin}-${deliveryTimeMax} días hábiles)`;
+  }
+
+  // Crear o actualizar el elemento de envío
+  if (!shippingElement) {
+    const shippingDiv = document.createElement("div");
+    shippingDiv.className = "summary-item";
+    shippingDiv.innerHTML = `
+      <span>Envío desde ${origin}${deliveryTimeText}:</span>
+      <span id="cart-shipping">${isFreeShipping ? '<span class="free-shipping">Gratis</span>' : "$" + formatPrice(shippingCost)}</span>
+    `;
+
+    // Insertar antes del total
+    totalElement.parentNode.parentNode.insertBefore(shippingDiv, totalElement.parentNode);
+  } else {
+    // Actualizar el texto del elemento padre para incluir el origen y tiempo de entrega
+    const shippingLabel = shippingElement.parentNode.querySelector("span:first-child");
+    if (shippingLabel) {
+      shippingLabel.textContent = `Envío desde ${origin}${deliveryTimeText}:`;
+    }
+
+    shippingElement.innerHTML = isFreeShipping
+      ? '<span class="free-shipping">Gratis</span>'
+      : "$" + formatPrice(shippingCost);
+  }
+
+  // Calcular el total con envío
+  const total = subtotal + (isFreeShipping ? 0 : shippingCost);
+
+  // Actualizar el total
+  totalElement.innerHTML = "$" + formatPrice(total);
+}
+
+// Función para verificar si se ha calculado el envío
+function verificarEnvioCalculado() {
+  const checkoutBtn = document.getElementById("checkout-btn");
+  
+  if (checkoutBtn) {
+    // Siempre habilitar el botón de checkout
+    checkoutBtn.disabled = false;
+    checkoutBtn.title = "Proceder al pago";
+  }
+}
+
+// Función para configurar eventos
 function setupEvents() {
   // Eventos de búsqueda
   if (searchBtn) {
@@ -1489,5 +2059,189 @@ function setupEvents() {
 
   // Iniciar slider automático
   setInterval(nextSlide, 5000) // Cambiar cada 5 segundos
+  
+  // Verificar si estamos en la página del carrito
+  const cartSection = document.getElementById("carrito");
+  if (cartSection) {
+    // Observar cambios en el carrito
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        if (mutation.type === "childList" && document.getElementById("cart-summary")) {
+          mostrarFormularioEnvio();
+          observer.disconnect();
+        }
+      });
+    });
+    
+    observer.observe(cartSection, { childList: true, subtree: true });
+    
+    // También intentar mostrar el formulario directamente
+    if (document.getElementById("cart-summary")) {
+      mostrarFormularioEnvio();
+    }
+  }
+  
+  // Asegurarse de que el botón de checkout esté habilitado
+  verificarEnvioCalculado();
 }
 
+// Agregar estilos para el formulario de envío si no existen
+if (!document.querySelector("style#shipping-form-style")) {
+  const shippingStyle = document.createElement("style");
+  shippingStyle.id = "shipping-form-style";
+  shippingStyle.textContent = `
+    .shipping-form {
+      background-color: #f8f8f8;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #eee;
+    }
+    
+    .shipping-form h4 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: var(--color-dark);
+      font-size: 1.1rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    
+    .shipping-origin {
+      background-color: #f0f8ff;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      border-left: 3px solid #3498db;
+    }
+    
+    .free-shipping-message {
+      background-color: #f0fff0;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      border-left: 3px solid #2ecc71;
+    }
+    
+    .shipping-form .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .shipping-form .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .shipping-form .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    .shipping-form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    
+    .shipping-form input,
+    .shipping-form select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    
+    .shipping-form input:focus,
+    .shipping-form select:focus {
+      border-color: var(--color-dark);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(148, 90, 66, 0.2);
+    }
+    
+    .input-with-link {
+      position: relative;
+    }
+    
+    .zipcode-link {
+      display: block;
+      font-size: 0.8rem;
+      margin-top: 5px;
+      color: #3498db;
+      text-decoration: none;
+    }
+    
+    .zipcode-link:hover {
+      text-decoration: underline;
+    }
+    
+    .shipping-form button {
+      background-color: var(--color-dark);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .shipping-form button:hover {
+      background-color: #7a4a35;
+    }
+    
+    .shipping-result {
+      margin-top: 15px;
+    }
+    
+    .shipping-result .success-message {
+      color: #2ecc71;
+      background-color: #f0fff0;
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #2ecc71;
+    }
+    
+    .shipping-result .error-message {
+      color: #e74c3c;
+      background-color: #fff0f0;
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #e74c3c;
+    }
+    
+    .shipping-result .loading-message {
+      color: #3498db;
+      background-color: #f0f8ff;
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #3498db;
+    }
+    
+    .shipping-details {
+      background-color: #f9f9f9;
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 576px) {
+      .shipping-form .form-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .shipping-form .form-row .form-group {
+        margin-bottom: 10px;
+      }
+    }
+  `;
+  document.head.appendChild(shippingStyle);
+}
