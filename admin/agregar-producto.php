@@ -1,4 +1,30 @@
 <?php
+// Habilitar visualización de errores para depuración
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Función para registrar errores en un archivo de log
+function registrar_error($mensaje) {
+    $archivo_log = '../logs/errores_' . date('Y-m-d') . '.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $mensaje_log = "[$timestamp] $mensaje\n";
+    
+    // Crear directorio si no existe
+    if (!file_exists('../logs/')) {
+        mkdir('../logs/', 0777, true);
+    }
+    
+    file_put_contents($archivo_log, $mensaje_log, FILE_APPEND);
+}
+
+// Registrar información del servidor y PHP
+registrar_error("Versión PHP: " . phpversion());
+registrar_error("Servidor: " . $_SERVER['SERVER_SOFTWARE']);
+registrar_error("Límites PHP - upload_max_filesize: " . ini_get('upload_max_filesize'));
+registrar_error("Límites PHP - post_max_size: " . ini_get('post_max_size'));
+registrar_error("Límites PHP - memory_limit: " . ini_get('memory_limit'));
+
 require_once '../includes/config.php';
 require_once '../includes/db.php';
 
@@ -13,122 +39,224 @@ $exito = '';
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // Obtener datos del formulario
-  $nombre = escapar($_POST['nombre']);
-  $precio_costo = (float)$_POST['precio_costo'];
-  $multiplicador = (float)$_POST['multiplicador'];
-  $precio = $precio_costo * $multiplicador;
-  $cuotas = (int)$_POST['cuotas'];
-  $precio_cuota = $precio / $cuotas;
-  $categoria = escapar($_POST['categoria']);
-  $descripcion = escapar($_POST['descripcion']);
-  $caracteristicas = escapar($_POST['caracteristicas']);
-  $modo_uso = escapar($_POST['modo_uso']);
-  $calificacion = (float)$_POST['calificacion'];
-  $num_calificaciones = (int)$_POST['num_calificaciones'];
-
-  // Validaciones
-  if (empty($nombre)) {
-      $error = 'El nombre del producto es obligatorio.';
-  } else if ($precio_costo <= 0) {
-      $error = 'El precio de costo debe ser mayor que cero.';
-  } else if ($multiplicador <= 0) {
-      $error = 'El multiplicador debe ser mayor que cero.';
-  }
-
-  // Array para almacenar las rutas de las imágenes
-  $imagenes = [];
-  
-  // Manejar la imagen principal
-  $imagen = 'productos/default.jpg'; // Imagen por defecto
-
-  if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
-      $archivo = $_FILES['imagen'];
-      $nombre_archivo = $archivo['name'];
-      $tipo_archivo = $archivo['type'];
-      $tamano_archivo = $archivo['size'];
-      $temp_archivo = $archivo['tmp_name'];
-
-      // Verificar tipo de archivo
-      $extensiones_permitidas = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!in_array($tipo_archivo, $extensiones_permitidas)) {
-          $error = 'Tipo de archivo no permitido. Solo se permiten JPG y PNG.';
-      } else {
-          // Crear directorio si no existe
-          $directorio_destino = '../productos/';
-          if (!file_exists($directorio_destino)) {
-              mkdir($directorio_destino, 0777, true);
-          }
-
-          // Generar nombre único
-          $nombre_unico = uniqid() . '_' . $nombre_archivo;
-          $ruta_destino = $directorio_destino . $nombre_unico;
-
-          // Mover archivo
-          if (move_uploaded_file($temp_archivo, $ruta_destino)) {
-              $imagen = 'productos/' . $nombre_unico;
-              $imagenes[] = $imagen; // Agregar a la lista de imágenes
-          } else {
-              $error = 'Error al subir la imagen.';
-          }
-      }
-  }
-  
-  // Manejar imágenes adicionales
-  if (isset($_FILES['imagenes_adicionales']) && !empty($_FILES['imagenes_adicionales']['name'][0])) {
-      $total_imagenes = count($_FILES['imagenes_adicionales']['name']);
+  try {
+      registrar_error("Inicio de procesamiento de formulario");
       
-      for ($i = 0; $i < $total_imagenes; $i++) {
-          if ($_FILES['imagenes_adicionales']['error'][$i] === 0) {
-              $nombre_archivo = $_FILES['imagenes_adicionales']['name'][$i];
-              $tipo_archivo = $_FILES['imagenes_adicionales']['type'][$i];
-              $temp_archivo = $_FILES['imagenes_adicionales']['tmp_name'][$i];
-              
-              // Verificar tipo de archivo
-              $extensiones_permitidas = ['image/jpeg', 'image/jpg', 'image/png'];
-              if (!in_array($tipo_archivo, $extensiones_permitidas)) {
-                  $error = 'Tipo de archivo no permitido en imagen adicional. Solo se permiten JPG y PNG.';
-                  break;
+      // Obtener datos del formulario
+      $nombre = escapar($_POST['nombre']);
+      $precio_costo = (float)$_POST['precio_costo'];
+      $multiplicador = (float)$_POST['multiplicador'];
+      $precio = $precio_costo * $multiplicador;
+      $cuotas = (int)$_POST['cuotas'];
+      $precio_cuota = $precio / $cuotas;
+      $categoria = escapar($_POST['categoria']);
+      $descripcion = escapar($_POST['descripcion']);
+      $caracteristicas = escapar($_POST['caracteristicas']);
+      $modo_uso = escapar($_POST['modo_uso']);
+      $calificacion = (float)$_POST['calificacion'];
+      $num_calificaciones = (int)$_POST['num_calificaciones'];
+
+      registrar_error("Datos del formulario procesados correctamente");
+
+      // Validaciones
+      if (empty($nombre)) {
+          $error = 'El nombre del producto es obligatorio.';
+      } else if ($precio_costo <= 0) {
+          $error = 'El precio de costo debe ser mayor que cero.';
+      } else if ($multiplicador <= 0) {
+          $error = 'El multiplicador debe ser mayor que cero.';
+      }
+
+      if (!empty($error)) {
+          registrar_error("Error de validación: " . $error);
+          throw new Exception("Error de validación: " . $error);
+      }
+
+      // Array para almacenar las rutas de las imágenes
+      $imagenes = [];
+      
+      // Manejar la imagen principal
+      $imagen = 'productos/default.jpg'; // Imagen por defecto
+
+      if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
+          registrar_error("Procesando imagen principal");
+          
+          $archivo = $_FILES['imagen'];
+          $nombre_archivo = $archivo['name'];
+          $tipo_archivo = $archivo['type'];
+          $tamano_archivo = $archivo['size'];
+          $temp_archivo = $archivo['tmp_name'];
+
+          registrar_error("Imagen principal - Nombre: $nombre_archivo, Tipo: $tipo_archivo, Tamaño: $tamano_archivo bytes");
+
+          // Verificar tipo de archivo
+          $extensiones_permitidas = ['image/jpeg', 'image/jpg', 'image/png'];
+          if (!in_array($tipo_archivo, $extensiones_permitidas)) {
+              $error = 'Tipo de archivo no permitido. Solo se permiten JPG y PNG.';
+              registrar_error("Error: Tipo de archivo no permitido para imagen principal");
+              throw new Exception($error);
+          } else {
+              // Crear directorio si no existe
+              $directorio_destino = '../productos/';
+              if (!file_exists($directorio_destino)) {
+                  if (!mkdir($directorio_destino, 0777, true)) {
+                      $error = 'Error al crear el directorio de destino.';
+                      registrar_error("Error: No se pudo crear el directorio $directorio_destino");
+                      throw new Exception($error);
+                  }
+              }
+
+              // Verificar permisos del directorio
+              if (!is_writable($directorio_destino)) {
+                  $error = 'El directorio de destino no tiene permisos de escritura.';
+                  registrar_error("Error: El directorio $directorio_destino no tiene permisos de escritura");
+                  throw new Exception($error);
+              }
+
+              // Generar nombre único
+              $nombre_unico = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '', $nombre_archivo);
+              $ruta_destino = $directorio_destino . $nombre_unico;
+
+              // Mover archivo
+              if (move_uploaded_file($temp_archivo, $ruta_destino)) {
+                  $imagen = 'productos/' . $nombre_unico;
+                  $imagenes[] = $imagen; // Agregar a la lista de imágenes
+                  registrar_error("Imagen principal subida correctamente: $imagen");
               } else {
-                  // Crear directorio si no existe
-                  $directorio_destino = '../productos/';
-                  if (!file_exists($directorio_destino)) {
-                      mkdir($directorio_destino, 0777, true);
-                  }
-                  
-                  // Generar nombre único
-                  $nombre_unico = uniqid() . '_' . $nombre_archivo;
-                  $ruta_destino = $directorio_destino . $nombre_unico;
-                  
-                  // Mover archivo
-                  if (move_uploaded_file($temp_archivo, $ruta_destino)) {
-                      $imagenes[] = 'productos/' . $nombre_unico;
-                  } else {
-                      $error = 'Error al subir una imagen adicional.';
-                      break;
-                  }
+                  $error = 'Error al subir la imagen principal: ' . error_get_last()['message'];
+                  registrar_error("Error al subir imagen principal: " . error_get_last()['message']);
+                  throw new Exception($error);
               }
           }
       }
-  }
-
-  // Si no hay errores, insertar en la base de datos
-  if (empty($error)) {
-      // Convertir array de imágenes a JSON para almacenar
-      // Excluir la imagen principal del JSON de imágenes adicionales
-      $imagenes_adicionales = array_slice($imagenes, 1);
-      $imagenes_json = json_encode($imagenes_adicionales);
       
-      $sql = "INSERT INTO productos (nombre, precio_costo, multiplicador, precio, cuotas, precio_cuota, imagen, imagenes, categoria, descripcion, caracteristicas, modo_uso, calificacion, num_calificaciones) 
-              VALUES ('$nombre', $precio_costo, $multiplicador, $precio, $cuotas, $precio_cuota, '$imagen', '$imagenes_json', '$categoria', '$descripcion', '$caracteristicas', '$modo_uso', $calificacion, $num_calificaciones)";
-      
-      if (query($sql)) {
-          $exito = 'Producto agregado correctamente.';
-          // Redireccionar después de 2 segundos
-          header('Refresh: 2; URL=productos.php?mensaje=Producto agregado correctamente');
-      } else {
-          $error = 'Error al agregar el producto.';
+      // Manejar imágenes adicionales
+      if (isset($_FILES['imagenes_adicionales']) && !empty($_FILES['imagenes_adicionales']['name'][0])) {
+          registrar_error("Procesando imágenes adicionales");
+          
+          $total_imagenes = count($_FILES['imagenes_adicionales']['name']);
+          registrar_error("Total de imágenes adicionales: $total_imagenes");
+          
+          for ($i = 0; $i < $total_imagenes; $i++) {
+              if ($_FILES['imagenes_adicionales']['error'][$i] === 0) {
+                  $nombre_archivo = $_FILES['imagenes_adicionales']['name'][$i];
+                  $tipo_archivo = $_FILES['imagenes_adicionales']['type'][$i];
+                  $temp_archivo = $_FILES['imagenes_adicionales']['tmp_name'][$i];
+                  
+                  registrar_error("Imagen adicional $i - Nombre: $nombre_archivo, Tipo: $tipo_archivo");
+                  
+                  // Verificar tipo de archivo
+                  $extensiones_permitidas = ['image/jpeg', 'image/jpg', 'image/png'];
+                  if (!in_array($tipo_archivo, $extensiones_permitidas)) {
+                      $error = 'Tipo de archivo no permitido en imagen adicional. Solo se permiten JPG y PNG.';
+                      registrar_error("Error: Tipo de archivo no permitido para imagen adicional $i");
+                      throw new Exception($error);
+                  } else {
+                      // Crear directorio si no existe
+                      $directorio_destino = '../productos/';
+                      if (!file_exists($directorio_destino)) {
+                          if (!mkdir($directorio_destino, 0777, true)) {
+                              $error = 'Error al crear el directorio de destino.';
+                              registrar_error("Error: No se pudo crear el directorio $directorio_destino");
+                              throw new Exception($error);
+                          }
+                      }
+                      
+                      // Generar nombre único
+                      $nombre_unico = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9\._-]/', '', $nombre_archivo);
+                      $ruta_destino = $directorio_destino . $nombre_unico;
+                      
+                      // Mover archivo
+                      if (move_uploaded_file($temp_archivo, $ruta_destino)) {
+                          $imagenes[] = 'productos/' . $nombre_unico;
+                          registrar_error("Imagen adicional $i subida correctamente: productos/$nombre_unico");
+                      } else {
+                          $error = 'Error al subir una imagen adicional: ' . error_get_last()['message'];
+                          registrar_error("Error al subir imagen adicional $i: " . error_get_last()['message']);
+                          throw new Exception($error);
+                      }
+                  }
+              } else if ($_FILES['imagenes_adicionales']['error'][$i] !== UPLOAD_ERR_NO_FILE) {
+                  // Registrar errores de carga que no sean "no file"
+                  $codigo_error = $_FILES['imagenes_adicionales']['error'][$i];
+                  $mensaje_error = '';
+                  switch ($codigo_error) {
+                      case UPLOAD_ERR_INI_SIZE:
+                          $mensaje_error = 'El archivo excede el tamaño máximo permitido por PHP.';
+                          break;
+                      case UPLOAD_ERR_FORM_SIZE:
+                          $mensaje_error = 'El archivo excede el tamaño máximo permitido por el formulario.';
+                          break;
+                      case UPLOAD_ERR_PARTIAL:
+                          $mensaje_error = 'El archivo se subió parcialmente.';
+                          break;
+                      case UPLOAD_ERR_NO_TMP_DIR:
+                          $mensaje_error = 'No se encontró un directorio temporal.';
+                          break;
+                      case UPLOAD_ERR_CANT_WRITE:
+                          $mensaje_error = 'Error al escribir el archivo en el disco.';
+                          break;
+                      case UPLOAD_ERR_EXTENSION:
+                          $mensaje_error = 'Una extensión de PHP detuvo la carga del archivo.';
+                          break;
+                      default:
+                          $mensaje_error = 'Error desconocido.';
+                  }
+                  registrar_error("Error en imagen adicional $i: $mensaje_error (código $codigo_error)");
+              }
+          }
       }
+
+      // Si no hay errores, insertar en la base de datos
+      if (empty($error)) {
+          registrar_error("Preparando inserción en base de datos");
+          
+          // Convertir array de imágenes a JSON para almacenar
+          // Excluir la imagen principal del JSON de imágenes adicionales
+          $imagenes_adicionales = array_slice($imagenes, 1);
+          $imagenes_json = json_encode($imagenes_adicionales);
+          
+          // Verificar si la codificación JSON fue exitosa
+          if ($imagenes_json === false) {
+              $error = 'Error al codificar las imágenes a JSON: ' . json_last_error_msg();
+              registrar_error("Error de codificación JSON: " . json_last_error_msg());
+              throw new Exception($error);
+          }
+          
+          registrar_error("JSON de imágenes adicionales generado correctamente");
+          
+          // Preparar la consulta SQL con valores escapados correctamente
+          $sql = "INSERT INTO productos (nombre, precio_costo, multiplicador, precio, imagen, imagenes, categoria, descripcion, caracteristicas, modo_uso, calificacion, num_calificaciones) 
+                  VALUES ('" . escapar($nombre) . "', " . 
+                  floatval($precio_costo) . ", " . 
+                  floatval($multiplicador) . ", " . 
+                  floatval($precio) . ", '" . 
+                  escapar($imagen) . "', '" . 
+                  escapar($imagenes_json) . "', '" . 
+                  escapar($categoria) . "', '" . 
+                  escapar($descripcion) . "', '" . 
+                  escapar($caracteristicas) . "', '" . 
+                  escapar($modo_uso) . "', " . 
+                  floatval($calificacion) . ", " . 
+                  intval($num_calificaciones) . ")";
+          
+          registrar_error("Ejecutando consulta SQL");
+          
+          if (query($sql)) {
+              $exito = 'Producto agregado correctamente.';
+              registrar_error("Producto agregado correctamente a la base de datos");
+              // Redireccionar después de 2 segundos
+              header('Refresh: 2; URL=productos.php?mensaje=Producto agregado correctamente');
+          } else {
+              $error_mysql = mysqli_error($GLOBALS['conn']);
+              $error = 'Error al agregar el producto: ' . $error_mysql;
+              registrar_error("Error de MySQL: " . $error_mysql);
+              throw new Exception($error);
+          }
+      }
+  } catch (Exception $e) {
+      $error = $e->getMessage();
+      registrar_error("Excepción capturada: " . $error);
   }
 }
 ?>
@@ -637,4 +765,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </body>
 
 </html>
+
 
